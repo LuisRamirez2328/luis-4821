@@ -26,6 +26,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="dashboard">
       <header className="dashboard__header">
+        {/* Marca tipografica: dos bloques y una barra. No es un logo dibujado,
+            es la palabra recortada, que es lo que hace el diseno de referencia. */}
+        <span className="wordmark" aria-hidden="true">
+          CARACOLES<span>/26</span>
+        </span>
+
         <div className="dashboard__identidad">
           {/* Avatar con iniciales: identifica sin pedir una imagen. */}
           <span className="avatar" aria-hidden="true">
@@ -38,14 +44,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               .toUpperCase()}
           </span>
           <div>
-            <p className="dashboard__saludo">Hola,</p>
+            <p className="dashboard__saludo">Sesion activa</p>
             <h1 className="dashboard__nombre">{user?.fullName}</h1>
           </div>
         </div>
 
         <div className="dashboard__acciones">
           <BalanceCard balance={balance} />
-          <Button onClick={() => setModalAbierto(true)}>Recargar</Button>
+          <Button variant="recarga" onClick={() => setModalAbierto(true)}>
+            Recargar <span aria-hidden="true">+</span>
+          </Button>
           <Button variant="secundario" onClick={() => void cerrarSesion()}>
             Cerrar sesion
           </Button>

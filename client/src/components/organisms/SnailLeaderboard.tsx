@@ -45,38 +45,39 @@ export function SnailLeaderboard({ victorias, snails }: SnailLeaderboardProps) {
     victorias: victorias[caracol.id] ?? 0,
   }));
 
-  return (
+return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={datos} margin={{ top: 24, right: 16, bottom: 8, left: -18 }}>
-        {/* Fileres, no la gris por defecto de la libreria. */}
-        <CartesianGrid stroke="#ddd7c8" strokeDasharray="2 4" vertical={false} />
+        {/* Filetes en la familia de aceros del proyecto, no la gris por
+            defecto de la libreria. */}
+        <CartesianGrid stroke="#c9dce8" strokeDasharray="0" vertical={false} />
         <XAxis
           dataKey="nombre"
-          tick={{ fontSize: 12, fill: '#4d5c53' }}
+          tick={{ fontSize: 11, fill: '#3f5c76' }}
           tickLine={false}
-          axisLine={{ stroke: '#c3baa5' }}
+          axisLine={{ stroke: '#c9dce8' }}
         />
         <YAxis
           domain={[0, 6]}
           allowDecimals={false}
-          tick={{ fontSize: 12, fill: '#4d5c53' }}
+          tick={{ fontSize: 11, fill: '#3f5c76' }}
           tickLine={false}
           axisLine={false}
           label={{
             value: 'Victorias',
             angle: -90,
             position: 'insideLeft',
-            fill: '#808d85',
-            fontSize: 11,
+            fill: '#8aa9c4',
+            fontSize: 10,
           }}
         />
         <Tooltip
-          cursor={{ fill: 'rgba(23, 33, 28, 0.045)' }}
+          cursor={{ fill: 'rgba(29, 45, 68, 0.05)' }}
           formatter={(valor: number) => [`${valor} victoria(s)`, 'Victorias']}
         />
         {/* Relleno explicito: por defecto Recharts pinta la barra en un azul
             que no pertenece a la paleta del proyecto. */}
-        <Bar dataKey="victorias" fill="#1f5c43" radius={[2, 2, 0, 0]} maxBarSize={52}>
+        <Bar dataKey="victorias" fill="#3f5c76" maxBarSize={52}>
           {/*
             Etiqueta con el valor sobre la barra. Elimina la necesidad de leer
             el eje, que con barras cortas es dificil de interpolar.
@@ -84,8 +85,8 @@ export function SnailLeaderboard({ victorias, snails }: SnailLeaderboardProps) {
           <LabelList
             dataKey="victorias"
             position="top"
-            fontSize={12}
-            fill="#4d5c53"
+            fontSize={11}
+            fill="#3f5c76"
           />
         </Bar>
       </BarChart>

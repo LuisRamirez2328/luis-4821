@@ -49,8 +49,10 @@ export function BetStatsPanel({ wins, losses }: BetStatsPanelProps) {
     { name: 'Derrotas', valor: lossPct },
   ];
 
-  // Paleta del proyecto, no los verdes y rojos por defecto.
-  const COLORES = ['#2f7d5c', '#a6382c'];
+  // Paleta del proyecto: un solo sector en acero oscuro y otro en acero palido.
+// El par se distingue por valor, no por tono, que es como lo resuelve el
+// diseno de referencia.
+  const COLORES = ['#3f5c76', '#c9dce8'];
 
   return (
     <div className="stats-panel">
@@ -66,7 +68,7 @@ export function BetStatsPanel({ wins, losses }: BetStatsPanelProps) {
             outerRadius={85}
             // Un pixel de separacion entre sectores, para que se distingan.
             paddingAngle={2}
-            stroke="#fbfaf6"
+            stroke="#eaf2f8"
             strokeWidth={2}
           >
             {datos.map((entrada, indice) => (
