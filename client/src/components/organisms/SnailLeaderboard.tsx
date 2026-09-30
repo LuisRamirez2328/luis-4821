@@ -48,23 +48,45 @@ export function SnailLeaderboard({ victorias, snails }: SnailLeaderboardProps) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={datos} margin={{ top: 24, right: 16, bottom: 8, left: -18 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-        <XAxis dataKey="nombre" tick={{ fontSize: 12 }} />
+        {/* Fileres, no la gris por defecto de la libreria. */}
+        <CartesianGrid stroke="#ddd7c8" strokeDasharray="2 4" vertical={false} />
+        <XAxis
+          dataKey="nombre"
+          tick={{ fontSize: 12, fill: '#4d5c53' }}
+          tickLine={false}
+          axisLine={{ stroke: '#c3baa5' }}
+        />
         <YAxis
           domain={[0, 6]}
           allowDecimals={false}
-          tick={{ fontSize: 12 }}
-          label={{ value: 'Victorias', angle: -90, position: 'insideLeft' }}
+          tick={{ fontSize: 12, fill: '#4d5c53' }}
+          tickLine={false}
+          axisLine={false}
+          label={{
+            value: 'Victorias',
+            angle: -90,
+            position: 'insideLeft',
+            fill: '#808d85',
+            fontSize: 11,
+          }}
         />
         <Tooltip
+          cursor={{ fill: 'rgba(23, 33, 28, 0.045)' }}
           formatter={(valor: number) => [`${valor} victoria(s)`, 'Victorias']}
         />
-        <Bar dataKey="victorias" radius={[6, 6, 0, 0]} maxBarSize={48}>
+        {/* Relleno explicito: por defecto Recharts pinta la barra en un azul
+            que no pertenece a la paleta del proyecto. */}
+        <Bar dataKey="victorias" fill="#1f5c43" radius={[2, 2, 0, 0]} maxBarSize={52}>
           {/*
             Etiqueta con el valor sobre la barra. Elimina la necesidad de leer
             el eje, que con barras cortas es dificil de interpolar.
           */}
-          <LabelList dataKey="victorias" position="top" fontSize={12} />
+          <LabelList
+            dataKey="victorias"
+            position="top"
+            fontSize={12}
+            fill="#4d5c53"
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

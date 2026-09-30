@@ -97,7 +97,11 @@ export function Dashboard() {
             <SnailLeaderboard victorias={victorias} snails={dia.snails} />
           </ChartCard>
 
-          <ChartCard title="Tu rendimiento" subtitle="Victorias y derrotas (datos simulados)">            <BetStatsPanel wins={estadisticas.wins} losses={estadisticas.losses} />
+          <ChartCard
+            title="Tu rendimiento"
+            subtitle="Victorias y derrotas (datos simulados)"
+          >
+            <BetStatsPanel wins={estadisticas.wins} losses={estadisticas.losses} />
           </ChartCard>
         </div>
       ) : null}

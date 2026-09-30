@@ -49,7 +49,8 @@ export function BetStatsPanel({ wins, losses }: BetStatsPanelProps) {
     { name: 'Derrotas', valor: lossPct },
   ];
 
-  const COLORES = ['#10B981', '#EF4444'];
+  // Paleta del proyecto, no los verdes y rojos por defecto.
+  const COLORES = ['#2f7d5c', '#a6382c'];
 
   return (
     <div className="stats-panel">
@@ -65,6 +66,8 @@ export function BetStatsPanel({ wins, losses }: BetStatsPanelProps) {
             outerRadius={85}
             // Un pixel de separacion entre sectores, para que se distingan.
             paddingAngle={2}
+            stroke="#fbfaf6"
+            strokeWidth={2}
           >
             {datos.map((entrada, indice) => (
               <Cell
