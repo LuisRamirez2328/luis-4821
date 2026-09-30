@@ -2,33 +2,31 @@
    SISTEMA VISUAL
    ---------------------------------------------------------------------------
    Direccion tomada del diseno de referencia (ui-ux-design-feedback): paleta
-   azul acero con navy, paneles translucidos sobre fondo claro, sombras duras
-   desplazadas y etiquetas en versalitas muy espaciadas.
+   azul acero con navy, paneles translucidos, sombras duras desplazadas,
+   campos subrayados y etiquetas en versalitas muy espaciadas.
 
    ---------------------------------------------------------------------------
-   POR QUE NO ES UNA PLANTILLA GENERICA
+   LAS CINCO DECISIONES DEL DISENO
    ---------------------------------------------------------------------------
-   - CERO radio de esquina. Todo es anguloso salvo los circulos (avatar, anillo).
-     El radio suave es el gesto por defecto de una libreria de componentes;Aqui
-     se nota que hay una decision, no un valor por defecto.
-   - Las sombras son bloques desplazados y duros (12px 12px 0), no difuminados.
-     Se leen como papel recortado apoyado sobre la mesa, no como una capa
-     flotante con desenfoque.
-   - La paleta es de una sola familia: navy y sus cuatro derivados. No hay un
-     color de acento. La jerarquia se construye convalor y filetes, no pintando
-     superficies de colores distintos.
-   - Los paneles son blancos al 38% sobre el fondo: dejan ver el papel de fondo
-     a traves, como las laminas de un cartel colgado.
+   1. CERO radio de esquina. Todo es anguloso salvo los circulos (avatar,
+      simbolo, anillo, punto de estado). El radio suave es el gesto por
+      defecto de una libreria de componentes; aqui se nota una decision.
+   2. Sombras como BLOQUE desplazado y duro (6px 6px 0; 12px 12px 0 en el
+      modal). Papel recortado apoyado sobre la mesa, no capa flotante.
+   3. Los campos NO son cajas: son filetes. El dato se escribe sobre una linea
+      y el espacio respira. Se aplica igual en el acceso y en el modal de pago,
+      de modo que la interfaz tiene una sola anatomia de formulario.
+   4. Una sola familia de color. No hay color de acento: la jerarquia sale
+      del valor (claro/oscuro) y de los filetes. El unico color funcional es
+      el rojo de rechazo.
+   5. Etiquetas de 8 a 11px en versalitas con 0.14em de espaciado: el acento
+      tipografico que hace que la pantalla se lea como un cartel y no como
+      un panel de control.
    ========================================================================= */
 
 :root {
-  /* --- Color: una sola familia --------------------------------------------
-     #1d2d44 navy          texto principal, barra de navegacion
-     #3f5c76 acero oscuro  texto secundario, sector del anillo
-     #8aa9c4 acero medio   filetes, etiquetas, boton de recarga
-     #c9dce8 acero palido  tarjetas destacadas, nota de pago
-     #eaf2f8 hielo          fondo de pagina y de las tarjetas
-  */
+  /* #1d2d44 navy | #3f5c76 acero | #8aa9c4 acero medio
+     #c9dce8 acero palido | #eaf2f8 hielo */
   --navy: #1d2d44;
   --acero: #3f5c76;
   --acero-medio: #8aa9c4;
@@ -43,12 +41,9 @@
   --filete: var(--acero-palido);
   --filete-fuerte: var(--acero-medio);
 
-  /* El unico color funcional: indica rechazo. */
   --error: #e7000b;
 
   --radio: 0px;
-
-  /* Bloque desplazado, no difuminado. */
   --sombra-dura: 6px 6px 0 rgba(29, 45, 68, 0.16);
   --sombra-modal: 12px 12px 0 rgba(29, 45, 68, 0.22);
 
@@ -56,7 +51,6 @@
     Arial, sans-serif;
   --mono: 'Cascadia Mono', ui-monospace, Consolas, 'Courier New', monospace;
 
-  /* Micro-etiqueta. El espaciado amplio es lo que le da aire de cartel. */
   --etiqueta: 0.62rem;
 }
 
@@ -73,14 +67,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Etiqueta en versalitas espaciadas: el acento tipografico del diseno. */
-.etiqueta {
-  display: block;
-  font-size: var(--etiqueta);
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+/* Antetitulo en versalitas espaciadas. Es el signo tipografico del diseno. */
+.eyebrow {
+  margin: 0 0 17px;
   color: var(--texto-3);
+  font-size: 0.69rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
 }
 
 /* ===========================================================================
@@ -95,7 +88,10 @@ body {
   border-radius: var(--radio);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 .btn:active {
   transform: translateY(1px);
@@ -105,7 +101,6 @@ body {
   outline-offset: 2px;
 }
 
-/* Navy solido: la accion con mas peso. */
 .btn--primario {
   background: var(--navy);
   color: var(--hielo);
@@ -114,7 +109,8 @@ body {
   background: var(--acero);
 }
 
-/* Acero medio con texto navy: inviting y sigue siendo legible al 100%. */
+/* Acero medio con texto navy. Existe porque en la barra de navegacion el CTA
+   navy y el boton de recarga quedarian pegados y con el mismo aspecto. */
 .btn--recarga {
   background: var(--acero-medio);
   color: var(--navy);
@@ -139,6 +135,10 @@ body {
 
 .btn--full {
   width: 100%;
+  /* Con dos hijos (texto y flecha) el contenido se reparte a los extremos,
+     que es el recurso del diseno para el boton de envio. */
+  justify-content: space-between;
+  padding: 17px 18px;
 }
 
 .btn--disabled {
@@ -147,69 +147,298 @@ body {
 }
 
 /* ===========================================================================
-   PANTALLA DE ACCESO
+   ATOMO: Card
+   Superficie generica. El dashboard usa las Specialized ChartCard y
+   BalanceCard, que son versiones con encabezado y filete propios; esta queda
+   como el caso base.
    ========================================================================= */
 
-.auth-layout {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 4rem;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2.5rem;
+.card {
+  background: rgba(255, 255, 255, 0.38);
+  border: 1px solid var(--filete);
+  padding: 1.4rem;
 }
-
-/* Bloque navy a sangre: el mismo recurso que la barra del dashboard, para que
-   las dos pantallas pertenezcan al mismo sistema. */
-.auth-layout__marca {
-  color: var(--hielo);
-  background: var(--navy);
-  padding: 2.25rem 2rem;
-  border-left: 4px solid var(--acero-medio);
-  box-shadow: var(--sombra-dura);
-}
-
-.marca-glifo {
-  display: block;
-  color: var(--acero-medio);
-  margin-bottom: 0.8rem;
-}
-
-.auth-layout__titulo {
-  font-size: 1.9rem;
-  line-height: 1.1;
+.card__title {
+  margin: 0 0 0.8rem;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 0.5rem;
 }
 
-.auth-layout__subtitulo {
-  color: var(--acero-palido);
+/* ===========================================================================
+   ACCESO: reparto de dos paneles a pantalla completa
+   ========================================================================= */
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.06fr 0.94fr;
+  background: var(--fondo);
+}
+
+/* --- Panel de marca -------------------------------------------------------- */
+
+.brand-panel {
+  min-height: 100vh;
+  padding: 42px clamp(28px, 6vw, 92px) 30px;
+  background: var(--navy);
+  color: var(--hielo);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Anillos concentricos: tres circulos superpuestos con box-shadow en lugar de
+   tres elementos. Es el detalle que da profundidad sin una sola imagen. */
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  border: 1px solid rgba(138, 169, 196, 0.35);
+  border-radius: 50%;
+  right: -180px;
+  bottom: -120px;
+  box-shadow: 0 0 0 44px rgba(138, 169, 196, 0.06),
+    0 0 0 88px rgba(138, 169, 196, 0.05);
+  pointer-events: none;
+}
+
+.brand-header,
+.brand-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--acero-medio);
+  font-size: 0.69rem;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+.brand-footer {
+  color: var(--acero);
+}
+
+.brand-symbol {
+  width: 33px;
+  height: 33px;
+  border: 1px solid var(--acero-medio);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+/* Punto claro con sombra desplazada: el segundo punto se dibuja con una
+   sombra en vez de un segundo elemento. */
+.brand-symbol span {
+  width: 11px;
+  height: 11px;
+  background: var(--hielo);
+  border-radius: 50%;
+  display: block;
+  box-shadow: 7px 0 var(--acero-medio);
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+}
+
+/* TitularDisplay: enorme, con interlineado cerrado y tracking muy negativo.
+   El peso ligero mas el color de acero en la parte acentuada es lo que evita
+   que se lea como un titular de plantilla. */
+.brand-content h1 {
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
+  font-size: clamp(3.25rem, 7vw, 6rem);
+  line-height: 0.92;
+  letter-spacing: -0.07em;
+  font-weight: 400;
+}
+.brand-content h1 strong {
+  color: var(--acero-medio);
+  font-weight: 700;
 }
 
-.auth-layout__panel {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid var(--filete);
-  padding: 2rem;
+.brand-copy {
+  max-width: 390px;
+  color: var(--acero-palido);
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 29px 0 44px;
 }
 
-.auth-form__titulo {
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  margin: 0 0 1.4rem;
+/* Cifras grandes con tracking negativo, rotulo diminuto debajo. */
+.stat-row {
+  display: flex;
+  gap: clamp(25px, 5vw, 60px);
+}
+.stat-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.stat-row strong {
+  color: var(--hielo);
+  font-size: 1.7rem;
+  letter-spacing: -0.05em;
+}
+.stat-row span {
+  color: var(--acero-medio);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.auth-form__alternar {
-  text-align: center;
-  font-size: 0.85rem;
+/* --- Tarjeta del formulario ----------------------------------------------- */
+
+.auth-card {
+  align-self: center;
+  width: min(100%, 490px);
+  margin: 0 auto;
+  padding: 42px clamp(27px, 5vw, 60px);
+}
+
+.card-topline {
+  border-bottom: 1px solid var(--filete);
+  padding-bottom: 18px;
   color: var(--texto-2);
-  margin-bottom: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-radius: 50%;
+  background: var(--acero);
+  margin-right: 8px;
+}
+
+.card-heading {
+  padding: 40px 0 27px;
+}
+.card-heading .eyebrow {
+  color: var(--texto-2);
+  margin-bottom: 10px;
+}
+.card-heading h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 2.35rem;
+  letter-spacing: -0.06em;
+}
+.form-intro {
+  color: var(--texto-2);
+  margin: 9px 0 0;
+  font-size: 0.88rem;
+}
+
+/* ===========================================================================
+   Formularios: campos subrayados
+   ========================================================================= */
+
+.auth-form,
+.top-up-form {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.label {
+  color: var(--navy);
+  font-size: var(--etiqueta);
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* El campo es un filete, no una caja. Sin fondo ni borde superior: la
+   jerarquia la sostiene el espacio en blanco alrededor. */
+.input {
+  font: inherit;
+  font-size: 1rem;
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 13px 0 11px;
+  border: 0;
+  border-bottom: 2px solid var(--acero-medio);
+  border-radius: 0;
+  background: transparent;
+  color: var(--navy);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.input:focus {
+  border-bottom-color: var(--navy);
+  /* El anillo se dibuja como filete interior, coherente con el campo. */
+  box-shadow: none;
+  outline: none;
+}
+.input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.input::placeholder {
+  color: var(--acero-medio);
+}
+
+/* El campo con pieza a la derecha reserva el espacio para que el texto no
+   quede debajo del boton. */
+.form-field--con-accion .input {
+  padding-right: 56px;
+}
+
+.field-action {
+  position: absolute;
+  right: 0;
+  bottom: 14px;
+  border: 0;
+  background: none;
+  color: var(--texto-2);
+  cursor: pointer;
+  font-size: var(--etiqueta);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0;
+}
+.field-action:hover {
+  color: var(--navy);
+}
+.field-action:focus-visible {
+  outline: 2px solid var(--acero);
+  outline-offset: 2px;
+}
+
+.form-field__error {
+  margin: 6px 0 0;
+  font-size: 0.76rem;
+  color: var(--error);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.switch-copy {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--texto-2);
 }
 
 .enlace {
@@ -229,67 +458,15 @@ body {
 }
 
 /* ===========================================================================
-   ATOMO: Input
-   ========================================================================= */
-
-.form-field {
-  margin-bottom: 1.05rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.label {
-  font-size: var(--etiqueta);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--texto-2);
-}
-
-.input {
-  font: inherit;
-  font-size: 0.95rem;
-  padding: 0.68rem 0.75rem;
-  border: 1px solid var(--acero-medio);
-  border-radius: var(--radio);
-  background: var(--superficie);
-  color: var(--texto);
-  transition: border-color 0.14s ease, box-shadow 0.14s ease;
-}
-.input::placeholder {
-  color: var(--acero-medio);
-}
-.input:focus {
-  outline: none;
-  border-color: var(--navy);
-  box-shadow: inset 0 0 0 1px var(--navy);
-}
-
-.form-field__error {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--error);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-/* ===========================================================================
    ALERTAS
-   Filamento lateral; el color se reserva para el significado, no para el
-   adorno.
+   El color se reserva para el significado: solo el error lo usa.
    ========================================================================= */
 
 .alerta {
   border-left: 3px solid var(--acero-medio);
   background: rgba(255, 255, 255, 0.6);
   padding: 0.75rem 0.9rem;
-  font-size: 0.87rem;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
   line-height: 1.5;
 }
 .alerta--ok {
@@ -315,25 +492,30 @@ body {
    DASHBOARD
    ========================================================================= */
 
+/* El contenedor NO lleva ancho maximo: la barra tiene que llegar a los bordes
+   de la ventana. El ancho maximo va en el area de contenido, que es lo que se
+   centra. */
 .dashboard {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 clamp(22px, 5vw, 72px) 4rem;
+  min-height: 100vh;
 }
 
 /* --- Barra de navegacion ---------------------------------------------------
-   Navy a sangre, del ancho de la ventana. Es el recurso que amarra la pantalla
-   y repite el bloque de la pantalla de acceso. */
+   Navy a sangre del ancho de la ventana, con filete de acero abajo. */
 .dashboard__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  margin: 0 calc(-1 * clamp(22px, 5vw, 72px)) 0;
-  padding: 1rem clamp(22px, 5vw, 72px);
+  padding: 1.05rem clamp(22px, 5vw, 72px);
   background: var(--navy);
   color: var(--hielo);
   border-bottom: 3px solid var(--acero-medio);
+}
+
+.dashboard__main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(22px, 5vw, 72px) 4rem;
 }
 
 /* Marca tipografica: palabra recortada, no un logotipo dibujado. */
@@ -354,7 +536,6 @@ body {
   gap: 0.7rem;
 }
 
-/* 32px, filete de acero, 10px de cuerpo: la escala del diseno de referencia. */
 .avatar {
   width: 32px;
   height: 32px;
@@ -377,7 +558,6 @@ body {
   text-transform: uppercase;
   color: var(--acero-medio);
 }
-
 .dashboard__nombre {
   margin: 0;
   font-size: 0.95rem;
@@ -391,8 +571,7 @@ body {
   flex-wrap: wrap;
 }
 
-/* El saldo se recorta en hielo con filete de acero a la izquierda. Sobre navy
-   claro, el dinero se lee de un vistazo. */
+/* Saldo recortado en hielo: sobre navy claro, el dinero se lee de un vistazo. */
 .balance {
   display: flex;
   flex-direction: column;
@@ -403,7 +582,6 @@ body {
   color: var(--navy);
   border-left: 3px solid var(--acero-medio);
 }
-
 .balance__label {
   font-size: var(--etiqueta);
   font-weight: 800;
@@ -411,12 +589,11 @@ body {
   text-transform: uppercase;
   color: var(--acero);
 }
-
 .balance__value {
   font-size: 1.1rem;
   font-weight: 800;
   line-height: 1.1;
-  /* Cifras de ancho fijo: el saldo no debe cambiar de ancho al moverse. */
+  /* Cifras de ancho fijo: el saldo no cambia de ancho al moverse. */
   font-variant-numeric: tabular-nums;
 }
 
@@ -429,19 +606,45 @@ body {
   border-color: var(--acero);
 }
 
-/* ===========================================================================
-   GRAFICOS
-   ========================================================================= */
+/* --- Apertura -------------------------------------------------------------
+   Antetitulo, titular grande y linea de apoyo. El diseno de referencia cierra
+   este bloque con un boton "Participar en proxima carrera" que aqui no se
+   incluye: el enunciado prohibe la seccion de apuestas y la logica de ejecutar
+   carreras. */
+.dashboard-intro {
+  padding: clamp(40px, 7vw, 72px) 0 0;
+  max-width: 640px;
+}
+.dashboard-intro h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  font-weight: 400;
+}
+.dashboard-intro h1 strong {
+  color: var(--acero-medio);
+  font-weight: 700;
+}
+.intro-copy {
+  color: var(--texto-2);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 22px 0 0;
+  max-width: 46ch;
+}
+
+/* --- Graficos ------------------------------------------------------------- */
 
 .dashboard__graficos {
   display: grid;
   grid-template-columns: 1.45fr 0.8fr;
   gap: 30px;
-  margin-top: 30px;
+  margin-top: 34px;
   align-items: start;
 }
 
-/* Blanco translucido: deja ver el fondo, como una lamina de papel. */
+/* Blanco translucido: deja ver el papel de fondo a traves, como laminas. */
 .chart-card {
   background: rgba(255, 255, 255, 0.38);
   border: 1px solid var(--filete);
@@ -453,22 +656,19 @@ body {
   padding-bottom: 18px;
   margin-bottom: 1.1rem;
 }
-
 .chart-card__title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
-
-/* El subtitulo lleva datos (fecha y semilla), no una categoria, asi que va en
-   cuerpo pequeno: en versalitas la semilla se volveria ilegible. */
+/* El subtitulo lleva datos (fecha y semilla), no una categoria: en versalitas
+   la semilla seria ilegible. */
 .chart-card__subtitle {
   margin: 0.3rem 0 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--texto-3);
 }
-
 .chart-card__body {
   margin-top: 0.25rem;
 }
@@ -487,9 +687,13 @@ body {
   font-size: 11px;
 }
 
-/* ===========================================================================
-   LEYENDA
-   ========================================================================= */
+/* --- Leyenda -------------------------------------------------------------- */
+
+/* El anillo se centra en su caja; el texto equivalente va debajo. */
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+}
 
 .stats-panel__legend {
   list-style: none;
@@ -508,8 +712,8 @@ body {
   align-items: center;
   gap: 0.5rem;
 }
-
-/* Vinetas cuadradas de 8px: el unico circulo del sistema es el avatar. */
+/* Vinetas cuadradas: el unico circulo del sistema cumple una funcion, la de
+   estado o identidad. */
 .dot {
   width: 8px;
   height: 8px;
@@ -566,12 +770,16 @@ body {
   border-bottom: 1px solid var(--acero-medio);
   padding-bottom: 20px;
 }
-
 .modal__header h2 {
-  margin: 0.3rem 0 0;
-  font-size: 1.15rem;
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.04em;
+}
+/* El antetitulo del dialogo va pegado al borde superior del panel, asi que
+   pierde el margen inferior que tiene dentro de la tarjeta de acceso. */
+.modal__header .eyebrow {
+  margin-bottom: 0.15rem;
 }
 
 .modal__close {
@@ -587,27 +795,23 @@ body {
   color: var(--navy);
 }
 
-.modal__body {
-  padding: 0;
-}
-
-/* Nota de pago: bloque palido con filete de acero. */
+/* Nota de pago: bloque palido con filete de acero a la izquierda. */
 .modal__hint {
+  display: block;
   font-size: 0.78rem;
   color: var(--navy);
   background: var(--acero-palido);
   border-left: 3px solid var(--acero);
   padding: 13px 15px;
-  margin: 22px 0;
+  margin: 0 0 4px;
   line-height: 1.5;
-  display: block;
 }
 
 .modal__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.6rem;
-  margin-top: 1.4rem;
+  gap: 10px;
+  padding-top: 8px;
 }
 
 /* ===========================================================================
@@ -621,9 +825,19 @@ body {
 }
 
 @media (max-width: 900px) {
-  .auth-layout {
+  .auth-shell {
     grid-template-columns: 1fr;
-    gap: 2.25rem;
+  }
+  /* En columna el panel de marca deja de ser protagonista: se recorta. */
+  .brand-panel {
+    min-height: auto;
+    padding: 28px clamp(24px, 6vw, 92px) 32px;
+  }
+  .brand-content h1 {
+    font-size: clamp(2.4rem, 9vw, 3.4rem);
+  }
+  .brand-panel::after {
+    display: none;
   }
   .form-row {
     grid-template-columns: 1fr;
@@ -631,17 +845,16 @@ body {
 }
 
 @media (max-width: 620px) {
-  .dashboard {
-    padding: 0 16px 3rem;
-  }
   .dashboard__header {
-    margin: 0 -16px;
+    flex-wrap: wrap;
     padding: 1rem 16px;
-    flex-direction: column;
-    align-items: stretch;
+  }
+  .dashboard__main {
+    padding: 0 16px 3rem;
   }
   .dashboard__acciones {
     justify-content: space-between;
+    width: 100%;
   }
   .balance {
     width: 100%;
@@ -652,5 +865,8 @@ body {
   .modal__panel {
     padding: 20px;
     box-shadow: 6px 6px 0 rgba(29, 45, 68, 0.22);
+  }
+  .card-heading h2 {
+    font-size: 1.9rem;
   }
 }

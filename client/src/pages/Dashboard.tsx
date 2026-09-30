@@ -89,21 +89,46 @@ export function Dashboard() {
       {!dia && !error ? <p className="cargando">Cargando datos del dia...</p> : null}
 
       {dia ? (
-        <div className="dashboard__graficos">
-          <ChartCard
-            title="Victorias por caracol"
-            subtitle={`Dia simulado ${dia.date} - semilla "${dia.seed}"`}
-          >
-            <SnailLeaderboard victorias={victorias} snails={dia.snails} />
-          </ChartCard>
+        <>
+          {/* --- Apertura ---------------------------------------------------
+              Es el bloque de entrada del dashboard del diseno de referencia.
+              Se conserva el antetitulo, el titular grande y la linea de apoyo,
+              pero NO el boton "Participar en proxima carrera" que trae el
+              diseno: el enunciado prohibe construir una seccion para realizar
+              apuestas ni una logica para ejecutar carreras, y un boton que
+              promete la siguiente carrera con hora y lugar seria exactamente
+              eso. */}
+          <section className="dashboard-intro">
+            <p className="eyebrow">
+              Dia simulado {dia.date} · Semilla {dia.seed}
+            </p>
+            <h1>
+              Tu ritmo,
+              <br />
+              <strong>tus resultados.</strong>
+            </h1>
+            <p className="intro-copy">
+              Cada carrera cuenta. Aqui tienes una mirada rapida a la
+              temporada simulada.
+            </p>
+          </section>
 
-          <ChartCard
-            title="Tu rendimiento"
-            subtitle="Victorias y derrotas (datos simulados)"
-          >
-            <BetStatsPanel wins={estadisticas.wins} losses={estadisticas.losses} />
-          </ChartCard>
-        </div>
+          <div className="dashboard__graficos">
+            <ChartCard
+              title="Victorias por caracol"
+              subtitle={`Dia simulado ${dia.date} - semilla "${dia.seed}"`}
+            >
+              <SnailLeaderboard victorias={victorias} snails={dia.snails} />
+            </ChartCard>
+
+            <ChartCard
+              title="Tu rendimiento"
+              subtitle="Victorias y derrotas (datos simulados)"
+            >
+              <BetStatsPanel wins={estadisticas.wins} losses={estadisticas.losses} />
+            </ChartCard>
+          </div>
+        </>
       ) : null}
     </DashboardLayout>
   );

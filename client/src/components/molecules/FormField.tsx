@@ -9,6 +9,7 @@
  * olvidaria el mensaje en uno de los tres formularios, y el usuario no sabria
  * que paso.
  */
+import type { ReactNode } from 'react';
 import { Label } from '../atoms/Label';
 import { Input } from '../atoms/Input';
 
@@ -26,6 +27,14 @@ interface FormFieldProps {
   min?: number;
   max?: number;
   maxLength?: number;
+  /**
+   * Pieza a la derecha del campo, sobre el filete.
+   *
+   * Se usa para el interruptor de mostrar contrasena. Va fuera del Input a
+   * proposito: el boton no pertenece al campo de texto, y meterlo dentro
+   * haria que un lector de pantalla lo anunciara como parte de la etiqueta.
+   */
+  accion?: ReactNode;
 }
 
 export function FormField({
@@ -42,9 +51,10 @@ export function FormField({
   min,
   max,
   maxLength,
+  accion,
 }: FormFieldProps) {
   return (
-    <div className="form-field">
+    <div className={`form-field${accion ? ' form-field--con-accion' : ''}`}>
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
@@ -59,6 +69,7 @@ export function FormField({
         max={max}
         maxLength={maxLength}
       />
+      {accion}
       {/*
         aria-describedby conecta el mensaje con el input para lectores de
         pantalla. role="alert" hace que se anuncie al aparecer.

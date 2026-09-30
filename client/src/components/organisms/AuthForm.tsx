@@ -42,6 +42,9 @@ export function AuthForm({ modo, onCambiarModo }: AuthFormProps) {
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [erroresCampo, setErroresCampo] = useState<Record<string, string>>({});
+  // Mostrar la contrasena es una decision de la interfaz, no del formulario:
+  // el valor sigue siendo el mismo, solo cambia como se representa.
+  const [verPassword, setVerPassword] = useState(false);
 
   /** Valida en el cliente. Devuelve un objeto de errores (vacio si todo bien). */
   function validar(): Record<string, string> {
@@ -139,12 +142,24 @@ export function AuthForm({ modo, onCambiarModo }: AuthFormProps) {
         id="password"
         name="password"
         label="Contrasena"
-        type="password"
+        type={verPassword ? 'text' : 'password'}
         value={password}
         onChange={setPassword}
         autoComplete={esRegistro ? 'new-password' : 'current-password'}
         error={erroresCampo.password}
         disabled={enviando}
+        accion={
+          <button
+            type="button"
+            className="field-action"
+            onClick={() => setVerPassword((v) => !v)}
+            // El nombre accesible cambia con el estado: un lector de pantalla
+            // anuncia la accion que se va a ejecutar, no el estado actual.
+            aria-label={verPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+          >
+            {verPassword ? 'Ocultar' : 'Ver'}
+          </button>
+        }
       />
 
       {esRegistro ? (
@@ -161,11 +176,19 @@ export function AuthForm({ modo, onCambiarModo }: AuthFormProps) {
         />
       ) : null}
 
+      {/*
+        El boton separa la etiqueta de la flecha con justify-content: space-
+        between, de modo que la flecha queda en el extremo derecho. Es el mismo
+        recurso que usa la barra del dashboard.
+      */}
       <Button type="submit" fullWidth disabled={enviando}>
-        {enviando ? 'Procesando...' : esRegistro ? 'Crear cuenta' : 'Iniciar sesion'}
+        <span className="btn__texto">
+          {enviando ? 'Procesando...' : esRegistro ? 'Crear cuenta' : 'Iniciar sesion'}
+        </span>
+        <span aria-hidden="true">→</span>
       </Button>
 
-      <p className="auth-form__alternar">
+      <p className="switch-copy">
         {esRegistro ? 'Ya tienes cuenta?' : 'No tienes cuenta?'}{' '}
         <button type="button" className="enlace" onClick={onCambiarModo}>
           {esRegistro ? 'Inicia sesion' : 'Registrate'}

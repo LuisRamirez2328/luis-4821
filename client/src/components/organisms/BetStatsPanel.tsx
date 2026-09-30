@@ -50,8 +50,8 @@ export function BetStatsPanel({ wins, losses }: BetStatsPanelProps) {
   ];
 
   // Paleta del proyecto: un solo sector en acero oscuro y otro en acero palido.
-// El par se distingue por valor, no por tono, que es como lo resuelve el
-// diseno de referencia.
+  // El par se distingue por valor, no por tono, que es como lo resuelve el
+  // diseno de referencia.
   const COLORES = ['#3f5c76', '#c9dce8'];
 
   return (

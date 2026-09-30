@@ -143,7 +143,10 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
     <div className="modal" role="dialog" aria-modal="true" aria-labelledby="snailpay-title">
       <div className="modal__panel">
         <header className="modal__header">
-          <h2 id="snailpay-title">Recargar con SnailPay</h2>
+          <div>
+            <p className="eyebrow">SALDO SIMULADO</p>
+            <h2 id="snailpay-title">Recargar con SnailPay</h2>
+          </div>
           <button type="button" className="modal__close" onClick={onClose} aria-label="Cerrar">
             &times;
           </button>
@@ -163,7 +166,7 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
           en un solo sitio: validarMonto(). Un unico lugar que decide es
           mas facil de leer y de probar que dos que compiten.
         */}
-        <form onSubmit={manejarEnvio} className="modal__body" noValidate>
+        <form onSubmit={manejarEnvio} className="top-up-form" noValidate>
           <p className="modal__hint">
             <strong>Tarjeta de prueba:</strong> 1234123412341234 &middot; 12/26 &middot; CVV 543
           </p>

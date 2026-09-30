@@ -180,9 +180,37 @@ semilla `semilla-2026`. La misma semilla produce siempre el mismo día. Esto hac
 que los datos sean verificables a mano y que las pruebas no fallen de forma
 aleatoria.
 
+### Sistema visual
+La interfaz sigue cinco reglas, aplicadas por igual en el acceso, el dashboard y
+el modal de recarga:
+
+1. **Cero radio de esquina.** Todo es anguloso salvo los círculos, que cumplen una
+   función concreta: avatar, símbolo de marca, anillo y punto de estado.
+2. **Sombras como bloque desplazado** (`6px 6px 0`, y `12px 12px 0` en el modal).
+   El panel se apoya sobre la mesa en lugar de flotar encima.
+3. **Campos subrayados, no cajas.** El dato se escribe sobre un filete de 2 px. Se
+   usa la misma anatomía en el login y en el pago, de modo que no hay dos
+   formularios distintos dentro de la misma aplicación.
+4. **Una sola familia de color.** No hay color de acento: la jerarquía sale del
+   valor (claro/oscuro) y de los filetes. El único color funcional es el rojo de
+   rechazo.
+5. **Etiquetas en versalitas de 8 a 11 px** con `0.14em` de espaciado, que es el
+   acento tipográfico que hace que la pantalla se lea como un cartel.
+
+La paleta completa son cinco valores: `#1d2d44` (navy), `#3f5c76` (acero),
+`#8aa9c4` (acero medio), `#c9dce8` (acero pálido) y `#eaf2f8` (hielo).
+
+**Dos elementos del diseño de referencia que no se copiaron, a propósito.** El
+diseño original incluía un botón *Participar en próxima carrera* con hora y
+lugar, y una tabla de resultados por carrera. El enunciado prohíbe construir una
+sección para realizar apuestas y una lógica para ejecutar carreras, así que
+ambos se descartaron. El bloque de apertura del dashboard conserva el antetítulo,
+el titular grande y la línea de apoyo, pero termina en el gráfico: no hay nada
+que pulsar.
+
 ## 8. Pruebas
 
-47 pruebas automatizadas:
+52 pruebas automatizadas:
 
 - **Autenticación (8):** hash con prefijo bcrypt, sales distintos para la misma
   contraseña, correo único sin distinción de mayúsculas, rechazo de credenciales
@@ -198,7 +226,8 @@ aleatoria.
   que un fallo **no** modifique el saldo, que un éxito sí lo aumente, el bloqueo
   de montos inválidos sin llegar a llamar a la API, que la ruta protegida no
   muestre el dashboard sin sesión, el aislamiento del saldo entre dos cuentas
-  del mismo navegador, y el descarte de un saldo no creíble.
+  del mismo navegador, y el recorte de un saldo fuera de rango (valores no
+  numéricos, negativos o decimales a `0`; valores por encima del tope al tope).
 
 ## 9. Estructura
 

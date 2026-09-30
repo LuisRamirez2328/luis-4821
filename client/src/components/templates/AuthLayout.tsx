@@ -5,53 +5,91 @@
  * deja un hueco (children) donde se inyecta el contenido.
  *
  * Sirve para que login y registro compartan el mismo marco sin duplicarlo.
+ *
+ * ---------------------------------------------------------------------------
+ * POR QUE ESTA DIVIDIDA EN DOS PANELES
+ * ---------------------------------------------------------------------------
+ * El panel de marca no es decoracion: sostiene el titulo grande, que es la
+ * primera impresion del sitio. El formulario, en cambio, cambia entre login y
+ * registro pero comparte caja, encabezado yfilete, asi que no necesita su
+ * propia pantalla.
  */
 import type { ReactNode } from 'react';
 
 interface AuthLayoutProps {
   children: ReactNode;
+  /** Antetitulo en versalitas sobre el titulo del formulario. */
+  eyebrow: string;
+  /** Titulo del formulario. */
+  titulo: string;
+  /** Linea de apoyo bajo el titulo. */
+  intro: string;
 }
 
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout({ children, eyebrow, titulo, intro }: AuthLayoutProps) {
   return (
-    <div className="auth-layout">
-      <div className="auth-layout__marca">
-        {/* Marca dibujada en SVG, no un emoji. El emoji se renderiza con la
-            fuente del sistema, cambia entre maquinas y a partir de 40px se ve
-            como un marcador de posicion sin borrar. */}
-        <svg
-          className="marca-glifo"
-          viewBox="0 0 44 40"
-          width="44"
-          height="40"
-          aria-hidden="true"
-          focusable="false"
-        >
-          {/* Caracol: espiral exterior y segunda vuelta interior. */}
-          <path
-            d="M21.5 26.5c-6.4 0-11.6-3.9-11.6-8.7 0-4.4 4.8-7.8 11.6-7.8 5.6 0 10 2.6 10 6.2 0 2.5-2.1 4.1-4.5 4.1-2.1 0-3.6-1.4-3.6-3.2 0-1.4 1.1-2.4 2.4-2.4 1 0 1.7.6 1.7 1.4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Cuerpo. */}
-          <path
-            d="M9 31.5h22"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-          {/* Ojo. */}
-          <circle cx="12.5" cy="23.5" r="1.6" fill="currentColor" />
-        </svg>
-        <h1 className="auth-layout__titulo">Carreras de Caracoles</h1>
-        <p className="auth-layout__subtitulo">
-          Sigue el ritmo de las seis carreras del dia.
-        </p>
-      </div>
-      <div className="auth-layout__panel">{children}</div>
-    </div>
+    <main className="auth-shell">
+      {/* --- Panel de marca ------------------------------------------------- */}
+      <section className="brand-panel" aria-labelledby="brand-title">
+        <div className="brand-header">
+          {/* Simbolo: un circulo con un punto, el gesto minimo que ya
+              distingue la marca sin recurrir a un logotipo ilustrado. */}
+          <span className="brand-symbol" aria-hidden="true">
+            <span />
+          </span>
+          <span>CC / 026</span>
+        </div>
+
+        <div className="brand-content">
+          <p className="eyebrow">LIGA DE RITMO LENTO</p>
+          <h1 id="brand-title">
+            Corre a tu
+            <br />
+            <strong>propio ritmo.</strong>
+          </h1>
+          <p className="brand-copy">
+            Seis caracoles, seis carreras y un unico dia simulado. Los datos
+            son de muestra, la logica de recarga es real.
+          </p>
+
+          {/* Cifras de la propia simulacion, no inventadas para rellenar. */}
+          <div className="stat-row">
+            <div>
+              <strong>06</strong>
+              <span>carreras</span>
+            </div>
+            <div>
+              <strong>06</strong>
+              <span>caracoles</span>
+            </div>
+            <div>
+              <strong>00</strong>
+              <span>apuestas</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="brand-footer">
+          <span>CARACOL CLUB</span>
+          <span>EST. 2026</span>
+        </div>
+      </section>
+
+      {/* --- Formulario ----------------------------------------------------- */}
+      <section className="auth-card" aria-labelledby="form-title">
+        <div className="card-topline">
+          <span className="status-dot" aria-hidden="true" />
+          Temporada 2026 · Datos simulados
+        </div>
+
+        <div className="card-heading">
+          <p className="eyebrow">{eyebrow}</p>
+          <h2 id="form-title">{titulo}</h2>
+          <p className="form-intro">{intro}</p>
+        </div>
+
+        {children}
+      </section>
+    </main>
   );
 }

@@ -10,13 +10,15 @@ import { AuthForm } from '../components/organisms/AuthForm';
 
 export function Register() {
   const [modo, setModo] = useState<'login' | 'registro'>('registro');
+  const esLogin = modo === 'login';
 
   return (
-    <AuthLayout>
-      <h2 className="auth-form__titulo">
-        {modo === 'login' ? 'Inicia sesion' : 'Crea tu cuenta'}
-      </h2>
-      <AuthForm modo={modo} onCambiarModo={() => setModo(modo === 'login' ? 'registro' : 'login')} />
+    <AuthLayout
+      eyebrow={esLogin ? 'BIENVENIDO DE VUELTA' : 'NUEVO PARTICIPANTE'}
+      titulo={esLogin ? 'Inicia sesion' : 'Crea tu cuenta'}
+      intro={esLogin ? 'Continua donde lo dejaste.' : 'Empieza a registrar tu ritmo.'}
+    >
+      <AuthForm modo={modo} onCambiarModo={() => setModo(esLogin ? 'registro' : 'login')} />
     </AuthLayout>
   );
 }
