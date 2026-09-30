@@ -59,7 +59,7 @@ export const TARJETA_CAIDA_SISTEMA = '0000000000000000';
 
 /** Recarga minima y maxima admitidas. */
 export const MONTO_MINIMO = 1;
-export const MONTO_MAXIMO = 10_000;
+export const MONTO_MAXIMO = 20_000;
 
 /*
  * POR QUE EXISTE UN TECHO

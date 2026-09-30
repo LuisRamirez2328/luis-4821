@@ -74,7 +74,7 @@ Las rutas marcadas como *sesión* exigen la cabecera
 | Vencimiento | `12/26` |
 | CVV | `543` |
 | Nombre | cualquiera no vacío |
-| Monto | entero entre `1` y `10 000` |
+| Monto | entero entre `1` y `20 000` |
 
 ### Escenarios
 

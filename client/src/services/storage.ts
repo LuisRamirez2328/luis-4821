@@ -128,9 +128,9 @@ export function limpiarSesion(): void {
  * numero de ahi no significa que sea creible. Este techo convierte un valor
  * absurdo en un dato invalido en lugar de dejarlo pasar como si fuera dinero.
  *
- * El techo es holgado a proposito: con el limite de 10 000 por recarga, llegar
- * a mil millones exigiria cien mil recargas. No se trata de frenar al usuario,
- * sino de descartar valores que no pueden proceder de la app.
+ * El techo es holgado a proposito: con el limite de 20 000 por recarga, llegar
+ * a mil millones exigiria cincuenta mil recargas. No se trata de frenar al
+ * usuario, sino de descartar valores que no pueden proceder de la app.
  */
 const SALDO_MAXIMO = 1_000_000_000;
 

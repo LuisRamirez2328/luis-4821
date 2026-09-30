@@ -428,12 +428,6 @@ body {
   color: var(--error);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
 .switch-copy {
   margin: 4px 0 0;
   text-align: center;
@@ -737,81 +731,164 @@ body {
 
 /* ===========================================================================
    MODAL DE RECARGA
+   Valores copiados del diseno de referencia: fondo rgba(29,45,68,.72) con
+   desenfoque, panel hielo, sombra de bloque 12x12 y encabezado con filete.
    ========================================================================= */
 
-.modal {
+.modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(29, 45, 68, 0.72);
-  backdrop-filter: blur(5px);
+  z-index: 50;
   display: grid;
   place-items: center;
   padding: 22px;
-  z-index: 50;
+  background: rgba(29, 45, 68, 0.72);
+  backdrop-filter: blur(5px);
 }
 
-.modal__panel {
+.top-up-modal {
+  width: min(100%, 520px);
+  max-height: calc(100vh - 44px);
+  overflow: auto;
   background: var(--hielo);
   color: var(--navy);
-  width: 100%;
-  max-width: 520px;
-  max-height: calc(100vh - 44px);
-  overflow-y: auto;
   padding: 30px;
   /* Bloque desplazado duro: el dialogo se apoya, no flota. */
   box-shadow: var(--sombra-modal);
 }
 
-.modal__header {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
   border-bottom: 1px solid var(--acero-medio);
   padding-bottom: 20px;
 }
-.modal__header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-}
-/* El antetitulo del dialogo va pegado al borde superior del panel, asi que
-   pierde el margen inferior que tiene dentro de la tarjeta de acceso. */
-.modal__header .eyebrow {
-  margin-bottom: 0.15rem;
+.modal-header h2 {
+  margin: 7px 0 0;
+  font-size: 31px;
+  letter-spacing: -0.06em;
+  font-weight: 400;
 }
 
-.modal__close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+/* Rotulo de metrica: el mismo 8-11px en versalitas que usan las etiquetas del
+   panel de marca y de los graficos. */
+.metric-label {
+  color: var(--acero-medio);
+  font-size: 0.69rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+}
+
+.modal-close {
+  border: 0;
+  background: transparent;
+  color: var(--acero);
+  font-size: 27px;
   line-height: 1;
   cursor: pointer;
-  color: var(--acero);
   padding: 0;
 }
-.modal__close:hover {
+.modal-close:hover {
   color: var(--navy);
 }
 
-/* Nota de pago: bloque palido con filete de acero a la izquierda. */
-.modal__hint {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--navy);
-  background: var(--acero-palido);
-  border-left: 3px solid var(--acero);
+/* Nota de pago: columna de texto sobre bloque palido con filete de acero. */
+.payment-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 22px 0;
   padding: 13px 15px;
-  margin: 0 0 4px;
+  border-left: 3px solid var(--acero);
+  background: var(--acero-palido);
+  color: var(--navy);
+  font-size: 0.75rem;
   line-height: 1.5;
 }
+.payment-note span {
+  color: var(--acero);
+}
 
-.modal__actions {
+.top-up-form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.card-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* Montos sugeridos: botones transparentes que solo se distinguen por el filete.
+   El seleccionado invierte el fondo, en lugar de usar un color de acento. */
+.amount-options {
+  display: flex;
+  gap: 8px;
+  margin-top: -5px;
+}
+.amount-option {
+  flex: 1;
+  border: 1px solid var(--acero-medio);
+  background: transparent;
+  color: var(--acero);
+  padding: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+}
+.amount-option:hover:not(:disabled) {
+  border-color: var(--acero);
+  color: var(--navy);
+}
+.amount-option.selected {
+  border-color: var(--navy);
+  background: var(--acero-palido);
+  color: var(--navy);
+  font-weight: 700;
+}
+.amount-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   padding-top: 8px;
+}
+
+/* Los dos botones del pie son planos, sin la variante .btn: el dialogo usa su
+   propia escala de 13px/17px para no competir con el titulo de 31px. */
+.cancel-button,
+.confirm-button {
+  border: 0;
+  padding: 13px 17px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+.cancel-button {
+  background: transparent;
+  color: var(--acero);
+}
+.cancel-button:hover:not(:disabled) {
+  color: var(--navy);
+}
+.confirm-button {
+  background: var(--navy);
+  color: var(--hielo);
+}
+.confirm-button:hover:not(:disabled) {
+  background: var(--acero);
+}
+.cancel-button:disabled,
+.confirm-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ===========================================================================
@@ -839,8 +916,13 @@ body {
   .brand-panel::after {
     display: none;
   }
-  .form-row {
+  /* La referencia aprieta el panel y las columnas de la tarjeta en movil. */
+  .top-up-modal {
+    padding: 23px 20px;
+  }
+  .card-fields {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
@@ -861,10 +943,6 @@ body {
   }
   .chart-card {
     padding: 18px 15px;
-  }
-  .modal__panel {
-    padding: 20px;
-    box-shadow: 6px 6px 0 rgba(29, 45, 68, 0.22);
   }
   .card-heading h2 {
     font-size: 1.9rem;

@@ -13,7 +13,6 @@
  *
  * El if es la garantia de que un fallo jamas altera el saldo. No es estilo ni
  * adorno: es el requisito literal del enunciado ("si falla la transaccion, el
- * saldo no debe verse modificado").: es el requisito literal del enunciado ("si falla la transaccion, el
  * saldo no debe verse modificado").
  *
  * La estructura lo hace a prueba de errores futuros: cualquier caso nuevo
@@ -32,7 +31,6 @@ import { useState } from 'react';
 import { api, ApiError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { FormField } from '../molecules/FormField';
-import { Button } from '../atoms/Button';
 import { leerTarjeta } from '../../services/storage';
 import type { SnailPayResponse } from '@snail/shared';
 
@@ -46,7 +44,13 @@ import type { SnailPayResponse } from '@snail/shared';
  * copia, y esa es la que manda.
  */
 const MONTO_MINIMO = 1;
-const MONTO_MAXIMO = 10_000;
+const MONTO_MAXIMO = 20_000;
+
+/*
+ * Montos de un clic. Todos estan dentro del rango valido, y el que aparece
+ * seleccionado por defecto es el que el campo ya trae precargado.
+ */
+const MONTOS_SUGERIDOS = [50, 100, 250];
 
 /** Los tres estados posibles de una recarga, segun lo que devuelve SnailPay. */
 type Resultado = 'idle' | 'cargando' | 'exito' | 'fallo';
@@ -140,17 +144,36 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
   const occupado = resultado === 'cargando';
 
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="snailpay-title">
-      <div className="modal__panel">
-        <header className="modal__header">
+    <div
+      className="modal-backdrop"
+      role="presentation"
+      /* Cierra solo si el gesto empieza en el fondo. Sin esta comprobacion,
+         arrastrar desde un campo hasta el borde cerraria el dialogo. */
+      onMouseDown={(evento) => {
+        if (evento.target === evento.currentTarget) onClose();
+      }}
+    >
+      <div className="top-up-modal" role="dialog" aria-modal="true" aria-labelledby="snailpay-title">
+        <div className="modal-header">
           <div>
-            <p className="eyebrow">SALDO SIMULADO</p>
-            <h2 id="snailpay-title">Recargar con SnailPay</h2>
+            <p className="metric-label">BILLETERA DIGITAL</p>
+            <h2 id="snailpay-title">Recargar saldo</h2>
           </div>
-          <button type="button" className="modal__close" onClick={onClose} aria-label="Cerrar">
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar modal">
             &times;
           </button>
-        </header>
+        </div>
+
+        {/*
+          Fuera del formulario a proposito: es informacion sobre el pago, no un
+          campo. Ademas lleva los datos de la tarjeta de prueba, que un
+          evaluador necesita para poder ejecutar los tres escenarios.
+        */}
+        <div className="payment-note">
+          <strong>Pago seguro</strong>
+          <span>Tu saldo se actualizara al confirmar la recarga.</span>
+          <span>Tarjeta de prueba: 1234123412341234 &middot; 12/26 &middot; CVV 543</span>
+        </div>
 
         {/*
           noValidate es ESENCIAL, no decorativo.
@@ -167,9 +190,38 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
           mas facil de leer y de probar que dos que compiten.
         */}
         <form onSubmit={manejarEnvio} className="top-up-form" noValidate>
-          <p className="modal__hint">
-            <strong>Tarjeta de prueba:</strong> 1234123412341234 &middot; 12/26 &middot; CVV 543
-          </p>
+          {/* El monto va primero: es el dato que decide el tamano de la
+              operacion, y el diseno lo coloca antes de la tarjeta. */}
+          <FormField
+            id="amount"
+            name="amount"
+            label={`Monto a recargar (${MONTO_MINIMO} - ${MONTO_MAXIMO})`}
+            value={amount}
+            onChange={setAmount}
+            type="number"
+            error={errorMonto}
+            disabled={occupado}
+            min={MONTO_MINIMO}
+            max={MONTO_MAXIMO}
+          />
+
+          {/* Montos sugeridos. Escriben en el campo de arriba, no pagan nada:
+              sustituyen al tecleo para los cuatro casos comunes. */}
+          <div className="amount-options" role="group" aria-label="Montos sugeridos">
+            {MONTOS_SUGERIDOS.map((valor) => (
+              <button
+                key={valor}
+                type="button"
+                className={
+                  amount === String(valor) ? 'amount-option selected' : 'amount-option'
+                }
+                onClick={() => setAmount(String(valor))}
+                disabled={occupado}
+              >
+                ${valor}
+              </button>
+            ))}
+          </div>
 
           <FormField
             id="card-number"
@@ -181,7 +233,8 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
             disabled={occupado}
             maxLength={19}
           />
-          <div className="form-row">
+
+          <div className="card-fields">
             <FormField
               id="expiry-date"
               name="expiryDate"
@@ -205,33 +258,23 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
               maxLength={4}
             />
           </div>
+
           <FormField
             id="payer-name"
             name="fullName"
-            label="Nombre completo"
+            label="Nombre del titular"
             value={fullName}
             onChange={setFullName}
             autoComplete="cc-name"
             disabled={occupado}
           />
+
           {/*
             min y max se aplican en el input del navegador: es una primera
             barrera, pero NO la de seguridad. Si alguien llama a la API
             directamente, se saltan estos atributos. Por eso el rango se
             revalida en el servidor.
           */}
-          <FormField
-            id="amount"
-            name="amount"
-            label={`Monto a recargar (${MONTO_MINIMO} - ${MONTO_MAXIMO})`}
-            value={amount}
-            onChange={setAmount}
-            type="number"
-            error={errorMonto}
-            disabled={occupado}
-            min={MONTO_MINIMO}
-            max={MONTO_MAXIMO}
-          />
 
           {/*
             Mensajes de resultado. Cada escenario del enunciado tiene su
@@ -256,13 +299,16 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
             </div>
           ) : null}
 
-          <div className="modal__actions">
-            <Button variant="secundario" onClick={onClose} disabled={occupado}>
+          <div className="modal-actions">
+            <button type="button" className="cancel-button" onClick={onClose} disabled={occupado}>
               Cancelar
-            </Button>
-            <Button type="submit" disabled={occupado}>
+            </button>
+            {/* El texto sigue siendo "Pagar" y no "Agregar $X": el nombre
+                accesible exacto es parte del contrato que verifican las
+                pruebas del cliente. */}
+            <button type="submit" className="confirm-button" disabled={occupado}>
               {occupado ? 'Procesando...' : 'Pagar'}
-            </Button>
+            </button>
           </div>
         </form>
       </div>
