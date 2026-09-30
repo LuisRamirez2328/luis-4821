@@ -8,12 +8,16 @@
  * o cerrarlo es una decision de la estructura (capa sobre el contenido), no
  * del contenido en si.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { BalanceCard } from '../molecules/BalanceCard';
 import { Button } from '../atoms/Button';
 import { SnailPayForm } from '../organisms/SnailPayForm';
+import type { SnailPayResponse } from '@snail/shared';
+
+/** Tiempo que permanece el aviso de recarga antes de desaparecer solo. */
+const DURACION_AVISO = 6000;
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,6 +26,22 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, balance, cerrarSesion } = useAuth();
   const [modalAbierto, setModalAbierto] = useState(false);
+  /*
+   * El aviso vive aqui, y no dentro del modal, porque el modal se cierra solo
+   * en cuanto la recarga se aprueba. Si el mensaje fuera parte del dialogo se
+   * desmontaria con el y el usuario no veria ni el codigo de autorizacion.
+   */
+  const [aviso, setAviso] = useState<SnailPayResponse | null>(null);
+
+  // El aviso se retira solo. El temporizador se cancela si el usuario lo
+  // cierra antes o si llega otro aviso, para que no se pisen entre si.
+  useEffect(() => {
+    if (!aviso) {
+      return;
+    }
+    const temporizador = setTimeout(() => setAviso(null), DURACION_AVISO);
+    return () => clearTimeout(temporizador);
+  }, [aviso]);
 
   return (
     <div className="dashboard">
@@ -66,7 +86,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         Montado condicionalmente: cuando esta cerrado no existe en el DOM, asi
         que no se puede enfocar por tabulacion ni leer por lector de pantalla.
       */}
-      {modalAbierto ? <SnailPayForm onClose={() => setModalAbierto(false)} /> : null}
+      {modalAbierto ? (
+        <SnailPayForm
+          onClose={() => setModalAbierto(false)}
+          onExito={(respuesta) => setAviso(respuesta)}
+        />
+      ) : null}
+
+      {/*
+        role="status" para que un lector de pantalla lo anuncie sin robarle el
+        foco a quien esta en otra parte de la pagina. Va al final del DOM: se
+        superpone, no desplaza el contenido.
+      */}
+      {aviso ? (
+        <div className="toast" role="status">
+          <div>
+            <strong>Recarga exitosa.</strong> {aviso.status_detail}
+            <span className="toast__mono">
+              Autorizacion: {aviso.authorization_code}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="toast__cerrar"
+            onClick={() => setAviso(null)}
+            aria-label="Cerrar aviso"
+          >
+            &times;
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -210,7 +210,7 @@ que pulsar.
 
 ## 8. Pruebas
 
-52 pruebas automatizadas:
+57 pruebas automatizadas:
 
 - **Autenticación (8):** hash con prefijo bcrypt, sales distintos para la misma
   contraseña, correo único sin distinción de mayúsculas, rechazo de credenciales
@@ -222,12 +222,15 @@ que pulsar.
 - **SnailPay (18):** los tres escenarios, los 11 campos de la respuesta, que
   ningún fallo emita código de autorización, y el rango del monto (máximo,
   mínimo, decimal, no finito, y un número de tarjeta escrito en el campo).
-- **Cliente (19):** porcentajes del anillo que suman 100, persistencia del saldo,
+- **Cliente (24):** porcentajes del anillo que suman 100, persistencia del saldo,
   que un fallo **no** modifique el saldo, que un éxito sí lo aumente, el bloqueo
   de montos inválidos sin llegar a llamar a la API, que la ruta protegida no
   muestre el dashboard sin sesión, el aislamiento del saldo entre dos cuentas
-  del mismo navegador, y el recorte de un saldo fuera de rango (valores no
-  numéricos, negativos o decimales a `0`; valores por encima del tope al tope).
+  del mismo navegador, el recorte de un saldo fuera de rango (valores no
+  numéricos, negativos o decimales a `0`; valores por encima del tope al tope),
+  el cierre automático del modal solo en el escenario aprobado, la supervivencia
+  del código de autorización fuera del diálogo, que el diálogo **no** se cierre
+  ante un rechazo, y el formateo automático del vencimiento (`1226` → `12/26`).
 
 ## 9. Estructura
 

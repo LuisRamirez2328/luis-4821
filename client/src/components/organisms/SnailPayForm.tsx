@@ -52,10 +52,41 @@ const MONTO_MAXIMO = 20_000;
  */
 const MONTOS_SUGERIDOS = [50, 100, 250];
 
+/*
+ * Formateo del vencimiento.
+ *
+ * Se queda solo con los digitos y reinserta la barra, de modo que escribir
+ * "1226" produce "12/26" sin que el usuario tenga que acordarse de pulsar la
+ * barra. Acepta las dos formas: teclear "12/26" a mano tambien funciona,
+ * porque la barra se descarta y el resultado es el mismo.
+ *
+ * El recorte a cuatro digitos es lo que impide el desbordamiento: con el
+ * maxLength del input, un quinto digito ya no tendria sitio.
+ */
+function formatearVencimiento(texto: string): string {
+  const digitos = texto.replace(/\D/g, '').slice(0, 4);
+  if (digitos.length <= 2) {
+    return digitos;
+  }
+  return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
+}
+
 /** Los tres estados posibles de una recarga, segun lo que devuelve SnailPay. */
 type Resultado = 'idle' | 'cargando' | 'exito' | 'fallo';
 
-export function SnailPayForm({ onClose }: { onClose: () => void }) {
+interface SnailPayFormProps {
+  onClose: () => void;
+  /**
+   * Se invoca solo en el escenario aprobado, justo antes de cerrar el dialogo.
+   *
+   * Existe para que el aviso de confirmacion pueda mostrarse FUERA del modal:
+   * si el dialogo se cierra al instante, el codigo de autorizacion se
+   * perderia, y ese codigo es parte de la respuesta que hay que evidenciar.
+   */
+  onExito?: (respuesta: SnailPayResponse) => void;
+}
+
+export function SnailPayForm({ onClose, onExito }: SnailPayFormProps) {
   const { recargarSaldo, guardarTarjeta, user } = useAuth();
 
   // Se precargan la ultima tarjeta usada y el nombre del usuario, para no
@@ -130,6 +161,14 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
 
       // La tarjeta se persiste solo tras una operacion resuelta, nunca antes.
       guardarTarjeta({ cardNumber, cvv, fullName });
+
+      // Solo el exito cierra el dialogo. Un fallo lo deja abierto porque el
+      // usuario tiene que corregir algo e intentarlo otra vez; cerrarlo lo
+      // obligaria a reabrirlo y a explicar el error otra vez.
+      if (r.status === 'approved') {
+        onExito?.(r);
+        onClose();
+      }
     } catch (error) {
       // Fallo de red o del propio servidor: tampoco se toca el saldo.
       setResultado('fallo');
@@ -240,7 +279,7 @@ export function SnailPayForm({ onClose }: { onClose: () => void }) {
               name="expiryDate"
               label="Vencimiento (MM/AA)"
               value={expiryDate}
-              onChange={setExpiryDate}
+              onChange={(valor) => setExpiryDate(formatearVencimiento(valor))}
               placeholder="12/26"
               autoComplete="cc-exp"
               disabled={occupado}

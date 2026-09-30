@@ -326,6 +326,78 @@ describe('validacion del monto (bug real corregido)', () => {
   });
 });
 
+/*
+ * CIERRE AUTOMATICO DEL MODAL
+ * ---------------------------------------------------------------------------
+ * El dialogo se cierra solo cuando SnailPay aprueba la operacion, y se queda
+ * abierto cuando la rechaza. La segunda parte es la importante: si un fallo
+ * cerrara el dialogo, el usuario tendria que reabrirlo y escribir de nuevo
+ * toda la tarjeta para ver un error que ya se le habia mostrado.
+ *
+ * La confirmacion no puede vivir dentro del modal, porque se desmonta con el.
+ * Por eso se comprueba que el codigo de autorizacion aparezca FUERA del
+ * dialogo: es la prueba de que el aviso sobrevive al cierre.
+ */
+describe('cierre automatico del modal', () => {
+  it('cierra el dialogo cuando la recarga es exitosa', async () => {
+    preparar('approved');
+    await llenarFormulario({ monto: '500' });
+    await pagar();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+  });
+
+  it('el aviso conserva el codigo de autorizacion tras cerrarse el modal', async () => {
+    preparar('approved');
+    await llenarFormulario({ monto: '500' });
+    await pagar();
+
+    expect(await screen.findByText(/recarga exitosa/i)).toBeTruthy();
+    expect(screen.getByText(/SNP-OK/)).toBeTruthy();
+  });
+
+  it('NO cierra el dialogo si la tarjeta es rechazada', async () => {
+    preparar('declined', 1000);
+    await llenarFormulario({ tarjeta: '4000000000000002', monto: '500' });
+    await pagar();
+
+    // El mensaje de fallo tiene que seguir visible y ahi sigue el formulario.
+    await screen.findByText(/no se pudo completar/i);
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(screen.getByLabelText(/numero de tarjeta/i)).toBeTruthy();
+  });
+});
+
+/*
+ * FORMATEO AUTOMATICO DEL VENCIMIENTO
+ * ---------------------------------------------------------------------------
+ * Escribir "1226" tiene que producir "12/26". El caso interesante no es el
+ * resultado, sino que el usuario NO escriba la barra: por eso la prueba escribe
+ * solo digitos. La segunda parte comprueba que teclear la barra a mano siga
+ * funcionando, porque el filtro la descarta en lugar de duplicarla.
+ */
+describe('formateo del vencimiento', () => {
+  it('inserta la barra al escribir solo los digitos', async () => {
+    preparar();
+    await userEvent.click(await screen.findByRole('button', { name: /recargar/i }));
+
+    const campo = screen.getByLabelText(/vencimiento/i);
+    await userEvent.type(campo, '1226');
+    expect((campo as HTMLInputElement).value).toBe('12/26');
+  });
+
+  it('no duplica la barra si el usuario la escribe', async () => {
+    preparar();
+    await userEvent.click(await screen.findByRole('button', { name: /recargar/i }));
+
+    const campo = screen.getByLabelText(/vencimiento/i);
+    await userEvent.type(campo, '12/26');
+    expect((campo as HTMLInputElement).value).toBe('12/26');
+  });
+});
+
 describe('ruta protegida', () => {
   it('sin sesion, redirige al login y NO muestra el dashboard', async () => {
     // Sin guardar sesion, verificarSesion no debe llamarse siquiera.

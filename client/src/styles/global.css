@@ -730,6 +730,63 @@ body {
 }
 
 /* ===========================================================================
+   AVISO DE RECARGA
+   El modal se cierra solo tras el exito, asi que la confirmacion tiene que
+   sobrevivirle. Vive sobre el dashboard, con el mismo filete de acero del
+   resto del sistema, y se retira solo a los seis segundos.
+   ========================================================================= */
+
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  max-width: 380px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--hielo);
+  border-left: 3px solid var(--navy);
+  box-shadow: var(--sombra-dura);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.toast__mono {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--acero);
+  word-break: break-all;
+}
+
+.toast__cerrar {
+  border: 0;
+  background: none;
+  color: var(--acero);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.toast__cerrar:hover {
+  color: var(--navy);
+}
+
+@media (max-width: 620px) {
+  .toast {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
+}
+
+/* ===========================================================================
    MODAL DE RECARGA
    Valores copiados del diseno de referencia: fondo rgba(29,45,68,.72) con
    desenfoque, panel hielo, sombra de bloque 12x12 y encabezado con filete.
