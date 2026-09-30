@@ -34,10 +34,18 @@
 /** Claves de LocalStorage. Centralizadas para no repetir cadenas. */
 const CLAVES = {
   sesion: 'snail.sesion',
-  saldo: 'snail.saldo',
+  prefijoSaldo: 'snail.saldo.',
   tarjeta: 'snail.tarjeta',
   apuestas: 'snail.apuestas',
 } as const;
+
+/**
+ * Clave del saldo LEGADO: una sola clave global para todos los usuarios.
+ *
+ * Se conserva solo para poder borrarla en la migracion. Ver `SALDO_MAXIMO` y
+ * `migrarSaldoGlobal` para por que se abandona este esquema.
+ */
+const SALDO_LEGADO = 'snail.saldo';
 
 /**
  * Lee y parsea un valor de LocalStorage de forma segura.
@@ -94,6 +102,55 @@ export function limpiarSesion(): void {
 }
 
 // --- Saldo -----------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------------
+ * POR QUE EL SALDO VA POR USUARIO Y NO EN UNA CLAVE GLOBAL
+ * ---------------------------------------------------------------------------
+ * La primera version guardaba el saldo en 'snail.saldo', una unica clave para
+ * toda la aplicacion. Eso era incorrecto por dos motivos concretos:
+ *
+ *   1. El saldo es un dato de la CUENTA, no del navegador. Con una clave
+ *      global, dos cuentas distintas abiertas en el mismo navegador
+ *      comparten la misma billetera: el dinero de una persona aparece en la
+ *      pantalla de otra.
+ *   2. Al cerrar sesion el valor se conservaba a proposito ("es la cartera del
+ *      usuario"), asi que un valor erroneo, escrito a mano o producido por un
+ *      fallo, sobrevivia indefinidamente y reaparecia en cada inicio de sesion.
+ *
+ * Se resuelve indexando la clave por identificador de usuario. Ahora cada
+ * cuenta tiene su propio saldo y solo se restaura al entrar en ESA cuenta.
+ */
+
+/**
+ * Tope del saldo.
+ *
+ * LocalStorage es editable a mano por quien use el navegador, asi que leer un
+ * numero de ahi no significa que sea creible. Este techo convierte un valor
+ * absurdo en un dato invalido en lugar de dejarlo pasar como si fuera dinero.
+ *
+ * El techo es holgado a proposito: con el limite de 10 000 por recarga, llegar
+ * a mil millones exigiria cien mil recargas. No se trata de frenar al usuario,
+ * sino de descartar valores que no pueden proceder de la app.
+ */
+const SALDO_MAXIMO = 1_000_000_000;
+
+function claveSaldo(userId: string): string {
+  return `${CLAVES.prefijoSaldo}${userId}`;
+}
+
+/**
+ * Normaliza un saldo leido del almacenamiento.
+ *
+ * Se aplica tanto al leer como al escribir, de modo que un valor corrupto
+ * nunca llega a estar en memoria ni ocupa lugar como dato valido.
+ */
+function normalizarSaldo(valor: unknown): number {
+  if (typeof valor !== 'number' || !Number.isFinite(valor)) return 0;
+  if (!Number.isInteger(valor)) return 0;
+  if (valor < 0) return 0;
+  if (valor > SALDO_MAXIMO) return SALDO_MAXIMO;
+  return valor;
+}
 
 /**
  * El saldo arranca en 0, segun el enunciado.
@@ -102,19 +159,30 @@ export function limpiarSesion(): void {
  * raro: si la primera recarga devuelve 0 y despues se recarga saldo, un
  * lector que leyera antes podria ver 0 y sobrescribir el saldo real.
  */
-export function inicializarSaldo(): void {
-  if (leer<number>(CLAVES.saldo) === null) {
-    escribir(CLAVES.saldo, 0);
+export function inicializarSaldo(userId: string): void {
+  if (leer<number>(claveSaldo(userId)) === null) {
+    escribir(claveSaldo(userId), 0);
   }
 }
 
-export function leerSaldo(): number {
-  const valor = leer<number>(CLAVES.saldo);
-  return typeof valor === 'number' && Number.isFinite(valor) ? valor : 0;
+export function leerSaldo(userId: string): number {
+  return normalizarSaldo(leer<unknown>(claveSaldo(userId)));
 }
 
-export function guardarSaldo(saldo: number): void {
-  escribir(CLAVES.saldo, saldo);
+export function guardarSaldo(userId: string, saldo: number): void {
+  escribir(claveSaldo(userId), normalizarSaldo(saldo));
+}
+
+/**
+ * Elimina la clave global del saldo que usaba la primera version.
+ *
+ * No se intenta conservar su valor: era compartido entre cuentas, asi que no
+ * es posible saber a quien pertenecía. Ademas, en la practica arrastra saldos
+ * corruptos, que es justamente lo que se quiere descartar. Se borra una sola
+ * vez y no tiene coste en ejecuciones posteriores.
+ */
+export function migrarSaldoGlobal(): void {
+  borrar(SALDO_LEGADO);
 }
 
 // --- Datos de la tarjeta ---------------------------------------------------
@@ -163,11 +231,14 @@ export function limpiarApuestas(): void {
   borrar(CLAVES.apuestas);
 }
 
-/** Borra todo. Se usa al cerrar sesion, para no filtrar datos entre cuentas. */
+/** Borra sesion y apuestas. Se usa al cerrar sesion, para no filtrar datos entre cuentas. */
 export function limpiarTodo(): void {
   limpiarSesion();
   limpiarApuestas();
-  // El saldo NO se borra aqui a proposito: es la "cartera" del usuario y el
-  // enunciado pide que persista. En una app real el saldo viviria en el
-  // servidor, nunca en el navegador.
+  // El saldo NO se borra aqui, y ahora es correcto no hacerlo: al estar
+  // indexado por usuario, el valor pertenece a ESA cuenta y no puede verse
+  // desde otra. Se restaura al entrar de nuevo en la misma cuenta.
+  //
+  // Ademas, el enunciado pide que la sesion sobreviva a un F5, y el saldo es
+  // parte de lo que el usuario espera conservar entre visitas.
 }

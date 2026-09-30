@@ -15,13 +15,27 @@ import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { BetStatsPanel, calcularPorcentajes } from '../components/organisms/BetStatsPanel';
 import { AppRoutes } from '../App';
-import { guardarSaldo, leerSaldo, inicializarSaldo, guardarSesion } from '../services/storage';
+import {
+  guardarSaldo,
+  leerSaldo,
+  inicializarSaldo,
+  guardarSesion,
+  migrarSaldoGlobal,
+} from '../services/storage';
 import { api } from '../services/api';
 import type { SnailPayResponse } from '@snail/shared';
 
+/**
+ * Identificador del usuario de prueba.
+ *
+ * El saldo se guarda indexado por usuario, asi que todas las pruebas que lo
+ * tocan pasan por el mismo id para hablar de la misma cuenta.
+ */
+const USUARIO_ID = 'u1';
+
 beforeEach(() => {
   window.localStorage.clear();
-  inicializarSaldo();
+  inicializarSaldo(USUARIO_ID);
   // Recharts mide el contenedor; sin esto da 0x0 y Recharts avisa por consola.
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
@@ -47,13 +61,73 @@ describe('calcularPorcentajes', () => {
 
 describe('almacenamiento local', () => {
   it('el saldo arranca en 0', () => {
-    expect(leerSaldo()).toBe(0);
+    expect(leerSaldo(USUARIO_ID)).toBe(0);
   });
 
   it('el saldo sobrevive a una recarga (se relee de LocalStorage)', () => {
-    guardarSaldo(750);
+    guardarSaldo(USUARIO_ID, 750);
     // Simula el F5: una lectura nueva del mismo almacenamiento.
-    expect(leerSaldo()).toBe(750);
+    expect(leerSaldo(USUARIO_ID)).toBe(750);
+  });
+
+  /*
+   * ---------------------------------------------------------------------------
+   * AISLAMIENTO ENTRE CUENTAS
+   * ---------------------------------------------------------------------------
+   * Estas dos pruebas fijan un defecto real. El saldo se guardaba en una clave
+   * unica ('snail.saldo') para toda la aplicacion, de modo que dos cuentas
+   * distintas abiertas en el mismo navegador compartian la misma billetera.
+   * Con la clave por usuario, cada cuenta ve solo su dinero.
+   */
+  it('dos cuentas en el mismo navegador NO comparten saldo', () => {
+    guardarSaldo('u1', 5_000);
+    guardarSaldo('u2', 250);
+
+    expect(leerSaldo('u1')).toBe(5_000);
+    expect(leerSaldo('u2')).toBe(250);
+  });
+
+  it('el saldo de una cuenta es independiente del orden de entrada', () => {
+    // El defecto se manifestaba al alternar entre cuentas: una tomaba el saldo
+    // de la otra. Aqui se comprueba que el orden no altera nada.
+    guardarSaldo('u1', 1_000);
+    expect(leerSaldo('u2')).toBe(0);
+    expect(leerSaldo('u1')).toBe(1_000);
+  });
+
+  /*
+   * ---------------------------------------------------------------------------
+   * SALDO NO CREDIBLE
+   * ---------------------------------------------------------------------------
+   * localStorage es editable a mano, asi que un valor leido de ahi no es un
+   * dato fiable. Antes, leerSaldo solo comprobaba que el numero fuera finito, y
+   * por eso un saldo de 4 billones se aceptaba como dinero real y se
+   * resucitaba en cada inicio de sesion.
+   */
+  it('descarta un saldo absurdo en vez de mostrarlo como dinero', () => {
+    guardarSaldo('u9', 4_000_000_000_000_702);
+    expect(leerSaldo('u9')).toBe(1_000_000_000); // queda en el techo, no en el valor
+  });
+
+  it('descarta saldos negativos, decimales y valores no numericos', () => {
+    guardarSaldo('neg', -500);
+    expect(leerSaldo('neg')).toBe(0);
+
+    guardarSaldo('dec', 10.5);
+    expect(leerSaldo('dec')).toBe(0);
+
+    // Escritura directa, simulando a alguien editando el almacenamiento.
+    window.localStorage.setItem('snail.saldo.texto', '"mucho dinero"');
+    expect(leerSaldo('texto')).toBe(0);
+  });
+
+  it('elimina la clave global de la version anterior', () => {
+    // Se escribe a mano la clave que usaba la primera version, con el valor
+    // corrupto que aparecio en pruebas manuales.
+    window.localStorage.setItem('snail.saldo', '4000000000000702');
+    migrarSaldoGlobal();
+
+    expect(window.localStorage.getItem('snail.saldo')).toBeNull();
   });
 });
 
@@ -117,7 +191,7 @@ function preparar(
   saldoInicial = 0,
   montoCobrado = 500,
 ) {
-  guardarSaldo(saldoInicial);
+  guardarSaldo(USUARIO_ID, saldoInicial);
   vi.spyOn(api, 'verificarSesion').mockResolvedValue({
     user: { id: 'u1', fullName: 'Luis Ramirez', email: 'luis@ejemplo.com' },
   });
@@ -174,7 +248,7 @@ describe('REGLA CRITICA: un fallo no modifica el saldo', () => {
     await screen.findByText(/no se pudo completar/i);
 
     // Esta es la asercion que prueba el requisito literal del enunciado.
-    expect(leerSaldo()).toBe(1000);
+    expect(leerSaldo(USUARIO_ID)).toBe(1000);
     expect(screen.getByText(/tu saldo no fue modificado/i)).toBeTruthy();
   });
 
@@ -184,7 +258,7 @@ describe('REGLA CRITICA: un fallo no modifica el saldo', () => {
     await pagar();
 
     await screen.findByText(/no se pudo completar/i);
-    expect(leerSaldo()).toBe(1000);
+    expect(leerSaldo(USUARIO_ID)).toBe(1000);
   });
 
   it('con la tarjeta valida, el saldo SI se incrementa', async () => {
@@ -194,7 +268,7 @@ describe('REGLA CRITICA: un fallo no modifica el saldo', () => {
 
     await screen.findByText(/recarga exitosa/i);
     // 1000 + 500
-    expect(leerSaldo()).toBe(1500);
+    expect(leerSaldo(USUARIO_ID)).toBe(1500);
   });
 });
 
@@ -218,7 +292,7 @@ describe('validacion del monto (bug real corregido)', () => {
 
     expect(await screen.findByText(/monto maximo por recarga/i)).toBeTruthy();
     expect(spy).not.toHaveBeenCalled();
-    expect(leerSaldo()).toBe(0);
+    expect(leerSaldo(USUARIO_ID)).toBe(0);
   });
 
   it('bloquea un monto vacio', async () => {
@@ -248,7 +322,7 @@ describe('validacion del monto (bug real corregido)', () => {
 
     await screen.findByText(/recarga exitosa/i);
     expect(spy).toHaveBeenCalled();
-    expect(leerSaldo()).toBe(10_000);
+    expect(leerSaldo(USUARIO_ID)).toBe(10_000);
   });
 });
 

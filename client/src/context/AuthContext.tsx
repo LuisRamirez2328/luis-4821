@@ -31,6 +31,7 @@ import {
   inicializarSaldo,
   leerSaldo,
   guardarSaldo,
+  migrarSaldoGlobal,
   guardarTarjeta,
 } from '../services/storage';
 
@@ -62,6 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // sesiones), el frontend lo creeria valido para siempre. Preguntarle al
   // servidor es la unica forma fiable de saberlo.
   useEffect(() => {
+    // Se descarta la clave global de la version anterior. Se hace una sola vez
+    // y antes de leer nada, para que ningun camino pueda resurrectr el valor.
+    migrarSaldoGlobal();
+
     async function restaurar() {
       const guardada = leerSesion();
       if (!guardada) {
@@ -72,8 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { user: usuario } = await api.verificarSesion();
         setUser(usuario);
-        inicializarSaldo();
-        setBalance(leerSaldo());
+        // El saldo se lee con el id de QUIEN ESTA AUTENTICADO. Es la unica
+        // fuente fiable de a quien pertenece el dinero.
+        inicializarSaldo(usuario.id);
+        setBalance(leerSaldo(usuario.id));
         setEstado('con-sesion');
       } catch (error) {
         // Un 401 significa que el token ya no sirve: se descarta.
@@ -91,9 +98,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (fullName: string, email: string, password: string, confirm: string) => {
       const respuesta = await api.registrar(fullName, email, password, confirm);
       guardarSesion({ token: respuesta.token, user: respuesta.user });
-      inicializarSaldo();
+      inicializarSaldo(respuesta.user.id);
       setUser(respuesta.user);
-      setBalance(0);
+      // Se lee, en vez de fijar 0 a mano: si la cuenta recien creada ya tuviera
+      // saldo guardado, lo correcto es mostrarlo y no inventar un valor.
+      setBalance(leerSaldo(respuesta.user.id));
       setEstado('con-sesion');
     },
     [],
@@ -102,9 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const iniciarSesion = useCallback(async (email: string, password: string) => {
     const respuesta = await api.iniciarSesion(email, password);
     guardarSesion({ token: respuesta.token, user: respuesta.user });
-    inicializarSaldo();
+    inicializarSaldo(respuesta.user.id);
     setUser(respuesta.user);
-    setBalance(leerSaldo());
+    // Clave: el saldo se recupera con el id de la cuenta que acaba de entrar.
+    // Por eso dos cuentas en el mismo navegador muestran billeteras distintas.
+    setBalance(leerSaldo(respuesta.user.id));
     setEstado('con-sesion');
   }, []);
 
@@ -128,12 +139,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Se llama UNICAMENTE cuando SnailPay responde status "approved". Al estar
    * separado del servicio HTTP, es evidente que ninguna otra ruta puede
    * aumentar el saldo: es la garantia de que un fallo nunca lo modifica.
+   *
+   * Si no hay usuario no hay a quien creditarle el dinero, asi que la operacion
+   * se descarta en lugar de escribir en un almacen sin dueno.
    */
-  const recargarSaldo = useCallback((monto: number) => {
-    const nuevo = leerSaldo() + monto;
-    guardarSaldo(nuevo);
-    setBalance(nuevo);
-  }, []);
+  const recargarSaldo = useCallback(
+    (monto: number) => {
+      const userId = user?.id;
+      if (!userId) return;
+      const nuevo = leerSaldo(userId) + monto;
+      guardarSaldo(userId, nuevo);
+      setBalance(nuevo);
+    },
+    [user?.id],
+  );
 
   // Se expone guardarTarjeta para que el formulario de recarga persista la
   // tarjeta, como exige el enunciado.
