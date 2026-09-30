@@ -71,6 +71,33 @@ function formatearVencimiento(texto: string): string {
   return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
 }
 
+/*
+ * Formateo del numero de tarjeta: grupos de cuatro separados por guion.
+ *
+ * Es una ayuda de LECTURA, no de transporte. El guion se muestra, pero no se
+ * envia: ver soloDigitos() mas abajo. Confundir las dos cosas es el error
+ * clasico de este patron, y el sintoma es que la tarjeta correcta se rechaza.
+ *
+ * La funcion es idempotente: volver a aplicar el formato a una cadena ya
+ * formateada no anade guiones nuevos, asi que se puede usar tanto al teclear
+ * como al recuperar la tarjeta guardada.
+ */
+function formatearTarjeta(texto: string): string {
+  const digitos = texto.replace(/\D/g, '').slice(0, 16);
+  return digitos.replace(/(.{4})/g, '$1-').replace(/-$/, '');
+}
+
+/*
+ * Deja la tarjeta en solo digitos para el payload de la API.
+ *
+ * El guion es cosmetico y se lo pone la interfaz a quien teclea. SnailPay
+ * compara contra el numero en crudo, asi que lo que viaja por la red tiene que
+ * ser 1234123412341234 y no 1234-1234-1234-1234.
+ */
+function soloDigitos(texto: string): string {
+  return texto.replace(/\D/g, '');
+}
+
 /** Los tres estados posibles de una recarga, segun lo que devuelve SnailPay. */
 type Resultado = 'idle' | 'cargando' | 'exito' | 'fallo';
 
@@ -93,7 +120,9 @@ export function SnailPayForm({ onClose, onExito }: SnailPayFormProps) {
   // obligar a escribir todo de nuevo en cada recarga. De paso se cumple el
   // requisito de persistir la tarjeta.
   const guardada = leerTarjeta();
-  const [cardNumber, setCardNumber] = useState(guardada?.cardNumber ?? '');
+  // Se formatea al leer porque lo guardado son digitos pelados, y el campo
+  // debe mostrar los grupos desde el primer momento.
+  const [cardNumber, setCardNumber] = useState(formatearTarjeta(guardada?.cardNumber ?? ''));
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [fullName, setFullName] = useState(guardada?.fullName ?? user?.fullName ?? '');
@@ -144,7 +173,15 @@ export function SnailPayForm({ onClose, onExito }: SnailPayFormProps) {
     const monto = Number(amount);
 
     try {
-      const r = await api.cobrar({ cardNumber, expiryDate, cvv, fullName, amount: monto });
+      // El payload viaja sin guiones: el formato es de la pantalla, no del
+      // dato. Ver soloDigitos().
+      const r = await api.cobrar({
+        cardNumber: soloDigitos(cardNumber),
+        expiryDate,
+        cvv,
+        fullName,
+        amount: monto,
+      });
       setRespuesta(r);
 
       // === REGLA CRITICA ==================================================
@@ -160,7 +197,10 @@ export function SnailPayForm({ onClose, onExito }: SnailPayFormProps) {
       // ====================================================================
 
       // La tarjeta se persiste solo tras una operacion resuelta, nunca antes.
-      guardarTarjeta({ cardNumber, cvv, fullName });
+      // Se guardan los digitos: el formato se reconstruye al mostrarlos, y
+      // guardar la presentacion haria que el almacenamiento dependiera de la
+      // pantalla.
+      guardarTarjeta({ cardNumber: soloDigitos(cardNumber), cvv, fullName });
 
       // Solo el exito cierra el dialogo. Un fallo lo deja abierto porque el
       // usuario tiene que corregir algo e intentarlo otra vez; cerrarlo lo
@@ -267,7 +307,8 @@ export function SnailPayForm({ onClose, onExito }: SnailPayFormProps) {
             name="cardNumber"
             label="Numero de tarjeta"
             value={cardNumber}
-            onChange={setCardNumber}
+            onChange={(valor) => setCardNumber(formatearTarjeta(valor))}
+            placeholder="1234-1234-1234-1234"
             autoComplete="cc-number"
             disabled={occupado}
             maxLength={19}

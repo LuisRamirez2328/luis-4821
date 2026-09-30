@@ -398,6 +398,43 @@ describe('formateo del vencimiento', () => {
   });
 });
 
+/*
+ * FORMATEO DE LA TARJETA
+ * ---------------------------------------------------------------------------
+ * El guion con el que se ve la tarjeta NO puede viajar en el payload: SnailPay
+ * compara contra el numero en crudo. Es el fallo clasico de este patron, y es
+ * peligroso por una razon concreta: el cliente tiene la API mockeada en estas
+ * pruebas, asi que un envio mal formado pasaria todas las pruebas de aqui y
+ * solo fallaria en uso real, con la tarjeta buena rechazada.
+ *
+ * Por eso la segunda prueba mira el argumento que recibio el mock, y no solo
+ * lo que se ve en pantalla.
+ */
+describe('formateo de la tarjeta', () => {
+  it('agrupa los digitos de cuatro en cuatro', async () => {
+    preparar();
+    await userEvent.click(await screen.findByRole('button', { name: /recargar/i }));
+
+    const campo = screen.getByLabelText(/numero de tarjeta/i);
+    await userEvent.type(campo, '1234123412341234');
+    expect((campo as HTMLInputElement).value).toBe('1234-1234-1234-1234');
+  });
+
+  it('envia a la API los digitos sin guiones', async () => {
+    const spy = preparar('approved');
+    await llenarFormulario({ monto: '500' });
+    await pagar();
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalled();
+    });
+    // Lo que sale por la red es el numero pelado, no lo que se ve en pantalla.
+    // Con "?" a proposito: si no hubo llamada, la asercion falla mostrando
+    // undefined en vez de lanzar un TypeError que taparia el motivo real.
+    expect(spy.mock.calls[0]?.[0].cardNumber).toBe('1234123412341234');
+  });
+});
+
 describe('ruta protegida', () => {
   it('sin sesion, redirige al login y NO muestra el dashboard', async () => {
     // Sin guardar sesion, verificarSesion no debe llamarse siquiera.

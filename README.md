@@ -210,7 +210,7 @@ que pulsar.
 
 ## 8. Pruebas
 
-57 pruebas automatizadas:
+62 pruebas automatizadas:
 
 - **Autenticación (8):** hash con prefijo bcrypt, sales distintos para la misma
   contraseña, correo único sin distinción de mayúsculas, rechazo de credenciales
@@ -219,10 +219,13 @@ que pulsar.
 - **Carreras (7):** 6 caracoles, 6 carreras, un ganador válido por carrera, ids
   únicos, determinismo por semilla, y que el total de victorias coincida con el
   número de carreras.
-- **SnailPay (18):** los tres escenarios, los 11 campos de la respuesta, que
-  ningún fallo emita código de autorización, y el rango del monto (máximo,
-  mínimo, decimal, no finito, y un número de tarjeta escrito en el campo).
-- **Cliente (24):** porcentajes del anillo que suman 100, persistencia del saldo,
+- **SnailPay (21):** los tres escenarios, los 11 campos de la respuesta, que
+  ningún fallo emita código de autorización, el rango del monto (máximo,
+  mínimo, decimal, no finito, y un número de tarjeta escrito en el campo), y
+  que el formato de entrada no altere el veredicto: la tarjeta de éxito se
+  acepta con guiones o espacios, y las de rechazo y de caída se detectan
+  igual.
+- **Cliente (26):** porcentajes del anillo que suman 100, persistencia del saldo,
   que un fallo **no** modifique el saldo, que un éxito sí lo aumente, el bloqueo
   de montos inválidos sin llegar a llamar a la API, que la ruta protegida no
   muestre el dashboard sin sesión, el aislamiento del saldo entre dos cuentas
@@ -230,7 +233,9 @@ que pulsar.
   numéricos, negativos o decimales a `0`; valores por encima del tope al tope),
   el cierre automático del modal solo en el escenario aprobado, la supervivencia
   del código de autorización fuera del diálogo, que el diálogo **no** se cierre
-  ante un rechazo, y el formateo automático del vencimiento (`1226` → `12/26`).
+  ante un rechazo, el formateo automático del vencimiento (`1226` → `12/26`) y
+  el de la tarjeta (`1226` → `12/26`, `12341234…` → `1234-1234-…`), incluido
+  que el guion **no** viaje en el payload.
 
 ## 9. Estructura
 

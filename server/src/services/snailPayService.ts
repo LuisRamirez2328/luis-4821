@@ -144,12 +144,30 @@ function construirRespuesta(
  * "approved". Que la decision este del lado del cliente es justamente lo que
  * hace que un fallo nunca pueda alterar el saldo.
  */
+/**
+ * Deja la tarjeta en solo digitos.
+ *
+ * El numero de tarjeta se pega y se teclea con guiones o espacios con mucha
+ * frecuencia (los grupos de cuatro son como lo muestra cualquier formulario).
+ * Comparar la cadena tal cual rechazaria una tarjeta correcta solo por su
+ * formato, que es un fallo confuso: el usuario ve "tarjeta rechazada" cuando
+ * los digitos son buenos.
+ *
+ * Se normaliza en el servidor y no solo en el cliente porque el cliente no es
+ * una frontera confiable: cualquiera puede llamar a la API directamente.
+ */
+function soloDigitos(texto: string): string {
+  return texto.replace(/\D/g, '');
+}
+
 export function cobrar(datos: SnailPayChargeRequest): SnailPayResponse {
+  const tarjeta = soloDigitos(datos.cardNumber);
+
   // --- Escenario 3: error del sistema -------------------------------------
   // Se evalua PRIMERO, antes de validar nada. Si la pasarela esta caida, no
   // importa que los datos sean correctos: no se procesa ninguna solicitud.
   const hayCaidaForzada = pasarela.enCaida;
-  const esTarjetaCaida = datos.cardNumber === TARJETA_CAIDA_SISTEMA;
+  const esTarjetaCaida = tarjeta === TARJETA_CAIDA_SISTEMA;
   if (hayCaidaForzada || esTarjetaCaida) {
     return construirRespuesta(
       'error',
@@ -234,7 +252,7 @@ export function cobrar(datos: SnailPayChargeRequest): SnailPayResponse {
   // tarjeta 1234123412341234, vencimiento 12/26, CVV 543, nombre no vacio y
   // monto mayor que cero.
   if (
-    datos.cardNumber === TARJETA_EXITO &&
+    tarjeta === TARJETA_EXITO &&
     datos.expiryDate === VENCIMIENTO_EXITO &&
     datos.cvv === CVV_EXITO
   ) {

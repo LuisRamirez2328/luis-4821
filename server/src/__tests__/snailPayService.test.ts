@@ -84,6 +84,33 @@ describe('SnailPay - escenario 2: error de transaccion', () => {
     expect(r.authorization_code).toBeNull();
   });
 
+  /*
+   * Formato de entrada, no de tarjeta.
+   * ------------------------------------------------------------------------
+   * El numero se teclea y se pega con guiones o espacios todo el tiempo. Si la
+   * comparacion fuera por cadena exacta, "1234-1234-1234-1234" seria rechazada
+   * aunque los digitos sean los correctos, que es un fallo desconcertante para
+   * quien lo ve. El servidor normaliza porque es la unica frontera confiable.
+   */
+  it('acepta la tarjeta de exito aunque venga con guiones o espacios', () => {
+    const conGuiones = cobrar(solicitudValida({ cardNumber: '1234-1234-1234-1234' }));
+    expect(conGuiones.status).toBe('approved');
+
+    const conEspacios = cobrar(solicitudValida({ cardNumber: '1234 1234 1234 1234' }));
+    expect(conEspacios.status).toBe('approved');
+  });
+
+  it('sigue rechazando la tarjeta de rechazo aunque venga formateada', () => {
+    const r = cobrar(solicitudValida({ cardNumber: '4000-0000-0000-0002' }));
+    expect(r.status).toBe('declined');
+    expect(r.authorization_code).toBeNull();
+  });
+
+  it('detecta la caida del sistema aunque la tarjeta venga formateada', () => {
+    const r = cobrar(solicitudValida({ cardNumber: '0000-0000-0000-0000' }));
+    expect(r.status).toBe('error');
+  });
+
   it('rechaza un monto cero o negativo', () => {
     expect(cobrar(solicitudValida({ amount: 0 })).status).toBe('declined');
     expect(cobrar(solicitudValida({ amount: -50 })).status).toBe('declined');
