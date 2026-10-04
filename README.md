@@ -44,7 +44,7 @@ Abrir <http://localhost:5173>.
 
 ```bash
 npm run typecheck   # revisión de tipos de cliente y servidor
-npm run test        # 52 pruebas automatizadas
+npm run test        # 66 pruebas automatizadas
 npm run build       # compilación de producción
 npm run test:all    # los tres, en orden
 ```
@@ -208,9 +208,28 @@ ambos se descartaron. El bloque de apertura del dashboard conserva el antetítul
 el titular grande y la línea de apoyo, pero termina en el gráfico: no hay nada
 que pulsar.
 
+### Manejo de errores y timeout
+
+Todo el tráfico del cliente pasa por una única función, que concentra cuatro
+casos que de otro modo habría que repetir en cada pantalla:
+
+| Situación | Código | Qué ve el usuario |
+| --- | --- | --- |
+| El servidor no responde en 15 s | `TIMEOUT` | «El servidor tardo demasiado en responder.» |
+| Servidor caído o sin red | `NETWORK_ERROR` | «No se pudo conectar con el servidor.» |
+| El servidor responde con error | código de SnailPay | El `status_detail` que él envió |
+| Sesión caducada (401) | `AUTH_EXPIRED` | Cierre de sesión automático |
+
+Los dos primeros están **separados a propósito**: un servidor caído y un
+servidor lento son fallos distintos y una interfaz honesta los explica
+distinto. El corte de los 15 s usa `AbortController`, y el temporizador se
+limpia en un `finally` para que una respuesta rápida no deje un temporizador
+vivo. El límite es holgado a propósito porque SnailPay es un mock local y
+responde en milisegundos: 15 s solo se agotan ante un problema real.
+
 ## 8. Pruebas
 
-62 pruebas automatizadas:
+66 pruebas automatizadas:
 
 - **Autenticación (8):** hash con prefijo bcrypt, sales distintos para la misma
   contraseña, correo único sin distinción de mayúsculas, rechazo de credenciales
@@ -225,7 +244,7 @@ que pulsar.
   que el formato de entrada no altere el veredicto: la tarjeta de éxito se
   acepta con guiones o espacios, y las de rechazo y de caída se detectan
   igual.
-- **Cliente (26):** porcentajes del anillo que suman 100, persistencia del saldo,
+- **Cliente (30):** porcentajes del anillo que suman 100, persistencia del saldo,
   que un fallo **no** modifique el saldo, que un éxito sí lo aumente, el bloqueo
   de montos inválidos sin llegar a llamar a la API, que la ruta protegida no
   muestre el dashboard sin sesión, el aislamiento del saldo entre dos cuentas
@@ -236,6 +255,10 @@ que pulsar.
   ante un rechazo, el formateo automático del vencimiento (`1226` → `12/26`) y
   el de la tarjeta (`1226` → `12/26`, `12341234…` → `1234-1234-…`), incluido
   que el guion **no** viaje en el payload.
+- **Timeout (4):** que una petición colgada se corte a los 15 s y reporte un
+  código `TIMEOUT` distinguible de `NETWORK_ERROR`, que un servidor caído siga
+  reportando fallo de red y no se disfrace de timeout, y que una respuesta
+  rápida no deje el temporizador vivo.
 
 ## 9. Estructura
 

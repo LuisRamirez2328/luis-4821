@@ -15,6 +15,21 @@ import { leerSesion } from './storage';
 
 const BASE_URL = 'http://localhost:4000/api';
 
+/**
+ * Tiempo maximo de espera de una peticion, en milisegundos.
+ *
+ * POR QUE EXISTE: sin esto, si el servidor acepta la conexion pero nunca
+ * responde, `fetch` queda esperando indefinidamente y la interfaz se queda
+ * cargando para siempre. El usuario no puede distinguir "tardando" de
+ * "colgado", y no puede reintentar porque el boton sigue deshabilitado.
+ *
+ * 15s es un balance:SnailPay es un mock local y responde en milisegundos, asi
+ * que 15s es holgado de sobra para el caso normal y solo se agota cuando hay
+ * un problema real. Ante el agotamiento el error es distinguible del de red
+ * gracias al codigo TIMEOUT, para que la interfaz pueda explicar la diferencia.
+ */
+const TIEMPO_LIMITE_MS = 15_000;
+
 /** Error normalizado que el frontend puede mostrar sin parsear textos. */
 export class ApiError extends Error {
   constructor(
@@ -54,15 +69,32 @@ async function peticion<T>(
   }
 
   let respuesta: Response;
+  // El temporizador se crea aqui y se limpia en el `finally`, para que un
+  // request que ya termino no deje un timer vivo pendientes.
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => controlador.abort(), TIEMPO_LIMITE_MS);
+
   try {
     respuesta = await fetch(`${BASE_URL}${path}`, {
       method,
       headers: cabeceras,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controlador.signal,
     });
-  } catch {
+  } catch (e) {
+    // abort() lanza una DOMException con nombre 'AbortError'. Se distingue de
+    // un fallo de red real para poder decir el motivo correcto al usuario.
+    if (e instanceof Error && e.name === 'AbortError') {
+      throw new ApiError(
+        'El servidor tardo demasiado en responder. Intenta de nuevo.',
+        0,
+        'TIMEOUT',
+      );
+    }
     // fetch solo rechaza cuando no hubo respuesta (servidor caido, sin red).
     throw new ApiError('No se pudo conectar con el servidor.', 0, 'NETWORK_ERROR');
+  } finally {
+    clearTimeout(temporizador);
   }
 
   // 204 = exito sin contenido (logout). Intentar leer JSON daria error.

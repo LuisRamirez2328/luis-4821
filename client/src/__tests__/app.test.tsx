@@ -8,7 +8,7 @@
  *   2. Los porcentajes del anillo deben sumar 100 (si no, el grafico se deforma).
  *   3. La ruta protegida no debe renderizar el dashboard sin sesion.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -22,7 +22,7 @@ import {
   guardarSesion,
   migrarSaldoGlobal,
 } from '../services/storage';
-import { api } from '../services/api';
+import { api, ApiError } from '../services/api';
 import type { SnailPayResponse } from '@snail/shared';
 
 /**
@@ -462,5 +462,109 @@ describe('BetStatsPanel', () => {
     render(<BetStatsPanel wins={3} losses={2} />);
     expect(screen.getByText(/3 victorias \(60%\)/)).toBeTruthy();
     expect(screen.getByText(/2 derrotas \(40%\)/)).toBeTruthy();
+  });
+});
+
+/**
+ * El enunciado lista elmanejo de timeout entre los criterios de evaluacion.
+ * Estas pruebas fijan el comportamiento: una peticion colgada debe terminar
+ * sola, con un error distinguible del fallo de red, y sin dejar temporizadores
+ * vivos que disparen avisos mas tarde.
+ */
+describe('timeout de la peticion', () => {
+  /** Respuesta minima valida para un cobro exitoso. */
+  const CARGA = {
+    cardNumber: '1234123412341234',
+    expiryDate: '12/26',
+    cvv: '543',
+    fullName: 'Luis Ramirez',
+    amount: 100,
+  };
+
+  /**
+   *fetch que nunca responde: solo rechaza si se cancela, igual que un
+   * servidor que acepto la conexion pero no contesta.
+   */
+  function fetchColgado() {
+    return vi.fn(
+      (_url: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            const error = new Error('La peticion fue cancelada.');
+            error.name = 'AbortError';
+            reject(error);
+          });
+        }),
+    );
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  // Las pruebas anteriores espian `api.cobrar` y no restauran el espia al
+  // terminar. Sin esta limpieza, la llamada de este bloque seguiria resolviendo
+  // con el mock anterior y el mock de fetch no se usaria nunca.
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('corta la espera a los 15s y reporta TIMEOUT', async () => {
+    vi.useFakeTimers();
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(fetchColgado());
+
+    const promesa = api.cobrar(CARGA);
+    // Se promete el rechazo ANTES de avanzar el reloj: si la peticion se
+    // colgara, la prueba falla aqui en vez de colgarse hasta el timeout de
+    // vitest, que daria un error Mucho mas dificil de leer.
+    const rechazo = expect(promesa).rejects.toMatchObject({ code: 'TIMEOUT' });
+    await vi.advanceTimersByTimeAsync(15_000);
+    await rechazo;
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('el mensaje de timeout es distinto al de fallo de red', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchColgado());
+
+    const promesa = api.cobrar(CARGA);
+    // Se espera solo el camino del error: el tipado de la promesa es la
+    // union de exito y fallo, asi que se narrowea con el rechazo.
+    const rechazo = promesa.then(
+      () => null,
+      (e: ApiError) => e,
+    );
+    await vi.advanceTimersByTimeAsync(15_000);
+    const error = await rechazo;
+
+    expect(error?.code).toBe('TIMEOUT');
+    expect(error?.message).not.toBe('No se pudo conectar con el servidor.');
+  });
+
+  it('un fallo de red sigue reportando NETWORK_ERROR, no TIMEOUT', async () => {
+    // Un servidor caido rechaza el fetch de inmediato, sin agotar el reloj.
+    // Es un caso distinto y no debe disfrazarse de timeout.
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+
+    await expect(api.cobrar(CARGA)).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
+  });
+
+  it('una respuesta rapida no se cancela y limpia su temporizador', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ status: 'approved', transaction_amount: 100 }),
+    } as Response);
+
+    const respuesta = await api.cobrar(CARGA);
+    expect(respuesta).toMatchObject({ status: 'approved' });
+
+    // Si el temporizador siguiera vivo, al avanzar el reloj intentaria
+    // abortar sobre una peticion ya terminada.
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(30_000);
   });
 });
