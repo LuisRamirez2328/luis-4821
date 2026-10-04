@@ -1,12 +1,12 @@
 /**
  * RUTAS DE AUTENTICACION
  * ---------------------------------------------------------------------------
- * Decisión de diseño: las rutas NO contienen lógica de negocio. Solo:
+ * Decision de diseno: las rutas NO contienen logica de negocio. Solo:
  *   1. validan la entrada con Zod
  *   2. delegan en authService
  *   3. traducen el resultado a una respuesta HTTP
  *
- * Así la lógica se puede probar sin levantar el servidor, y las rutas quedan
+ *  Asi la logica se puede probar sin levantar el servidor, y las rutas quedan
  * cortas y legibles.
  */
 import { Router } from 'express';

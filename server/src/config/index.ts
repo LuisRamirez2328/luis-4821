@@ -1,8 +1,6 @@
 /**
- * Configuracion centralizada.
- *
- * Decision de diseño: ninguna variable de entorno o valor de infraestructura
- * deberia estar hardcodeado en el codigo. Se leen aqui una sola vez.
+ * Configuracion centralizada: los valores de infraestructura se leen aqui una
+ * sola vez en vez de estar hardcodeados en el codigo.
  */
 
 export const config = {

@@ -1,33 +1,18 @@
 /**
- * CLIENTE HTTP
- * ---------------------------------------------------------------------------
- * Un unico punto de salida hacia la API. Concentrar las llamadas aqui tiene
- * tres beneficios:
- *   1. La URL base y el token se escriben una sola vez.
- *   2. Los errores del servidor llegan ya como objetos, no como texto.
- *   3. Es el unico lugar que hay que tocar si la API cambia de direccion.
+ * Cliente HTTP: unico punto de salida hacia la API. Concentrarlo aqui deja la
+ * URL base y el token en un solo sitio, y los errores llegan ya como objetos.
  *
- * NOTA DE SEGURIDAD: el token se envia en la cabecera Authorization, NUNCA en
- * la URL. Un token en la URL queda en el historial del navegador y en los
- * logs del servidor.
+ * El token va en la cabecera Authorization, nunca en la URL: en la URL quedaria
+ * en el historial del navegador y en los logs del servidor.
  */
 import { leerSesion } from './storage';
 
 const BASE_URL = 'http://localhost:4000/api';
 
-/**
- * Tiempo maximo de espera de una peticion, en milisegundos.
- *
- * POR QUE EXISTE: sin esto, si el servidor acepta la conexion pero nunca
- * responde, `fetch` queda esperando indefinidamente y la interfaz se queda
- * cargando para siempre. El usuario no puede distinguir "tardando" de
- * "colgado", y no puede reintentar porque el boton sigue deshabilitado.
- *
- * 15s es un balance:SnailPay es un mock local y responde en milisegundos, asi
- * que 15s es holgado de sobra para el caso normal y solo se agota cuando hay
- * un problema real. Ante el agotamiento el error es distinguible del de red
- * gracias al codigo TIMEOUT, para que la interfaz pueda explicar la diferencia.
- */
+// Sin esto, si el servidor acepta la conexion pero no responde, fetch espera
+// para siempre y la interfaz queda cargando sin poder reintentar. 15s es
+// holgado para un mock local, y el codigo TIMEOUT permite distinguir este caso
+// del de red.
 const TIEMPO_LIMITE_MS = 15_000;
 
 /** Error normalizado que el frontend puede mostrar sin parsear textos. */
@@ -116,7 +101,7 @@ async function peticion<T>(
   return datos as T;
 }
 
-// --- Autenticacion ---------------------------------------------------------
+// Autenticacion
 
 export interface RespuestaAuth {
   user: { id: string; fullName: string; email: string };
@@ -141,7 +126,7 @@ export const api = {
   verificarSesion: () =>
     peticion<{ user: RespuestaAuth['user'] }>('GET', '/auth/me'),
 
-  // --- SnailPay -----------------------------------------------------------
+  // SnailPay
 
   /**
    * Cobra un monto. Devuelve la respuesta TAL CUAL la envia SnailPay, sin
@@ -156,7 +141,7 @@ export const api = {
     amount: number;
   }) => peticion<import('@snail/shared').SnailPayResponse>('POST', '/snailpay/charge', datos),
 
-  // --- Carreras -----------------------------------------------------------
+  // Carreras
 
   obtenerDia: () => peticion<import('@snail/shared').SimulatedDay>('GET', '/races/today'),
 };

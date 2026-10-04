@@ -1,16 +1,13 @@
 /**
- * MANEJADOR CENTRALIZADO DE ERRORES
- * ---------------------------------------------------------------------------
- * En Express, un error lanzado dentro de una ruta NO se responde solo: viaja
- * hacia abajo por la cadena de middlewares hasta que alguien lo atrape.
+ * Manejo de errores centralizado.
  *
- * Si cada ruta hiciera su propio try/catch, el formato de error variaria
- * segun quien escribio la ruta. Centralizando, TODA la API responde con la
- * misma estructura. Eso es lo que evalua el enunciado bajo "manejo de estados
- * y errores".
+ * En Express un error lanzado en una ruta no se responde solo: baja por la
+ * cadena de middlewares hasta que alguien lo atrape. Centralizarlo hace que
+ * toda la API responda con la misma estructura en vez de depender de quien
+ * escribio cada ruta.
  *
- * Por eso va SIEMPRE al final: si se registra antes, las rutas que se agregan
- * despues quedarian fuera de su alcance.
+ * Se registra al final a proposito: antes, las rutas que se agregaran despues
+ * quedarian fuera de su alcance.
  */
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';

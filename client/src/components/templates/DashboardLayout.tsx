@@ -1,12 +1,9 @@
 /**
- * PLANTILLA: DashboardLayout
- * ---------------------------------------------------------------------------
- * Estructura comun del dashboard: cabecera con identidad, saldo, boton de
- * recarga y cierre de sesion; luego el area de graficos.
+ * Estructura comun del dashboard: cabecera con identidad, saldo, recarga y
+ * cierre de sesion, y despues el area de graficos.
  *
- * El estado del modal de recarga vive AQUI y no en la pagina, porque abrirlo
- * o cerrarlo es una decision de la estructura (capa sobre el contenido), no
- * del contenido en si.
+ * El estado del modal vive aqui y no en la pagina porque abrirlo o cerrarlo es
+ * una decision de la estructura (una capa sobre el contenido).
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';

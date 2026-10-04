@@ -1,8 +1,5 @@
 /**
- * Middleware para rutas no encontradas.
- *
- * Responsabilidad: si ninguna ruta respondio, convertir el 404 en un error
- * con el mismo formato que usa errorHandler.
+ * Convierte el 404 en un error con el mismo formato que usa errorHandler.
  */
 import type { NextFunction, Request, Response } from 'express';
 

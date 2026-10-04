@@ -1,13 +1,6 @@
 /**
- * MOLECULA: FormField
- * ---------------------------------------------------------------------------
- * Agrupa Label + Input + mensaje de error en una unidad. Es el patron
- * "compound component" simplificado: el componente que sabe de las tres piezas
- * pero no de ninguna en particular.
- *
- * Por que agruparlos: si cada formularioarmara el trio a mano, un error
- * olvidaria el mensaje en uno de los tres formularios, y el usuario no sabria
- * que paso.
+ * Agrupa Label + Input + mensaje de error. Si cada formulario armara el trio a
+ * mano, uno se olvidaria del mensaje y el usuario no sabria que paso.
  */
 import type { ReactNode } from 'react';
 import { Label } from '../atoms/Label';

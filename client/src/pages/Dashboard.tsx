@@ -1,23 +1,14 @@
 /**
- * PAGINA: Dashboard
- * ---------------------------------------------------------------------------
- * Reune los datos del dia simulado y se los pasa a los graficos.
+ * Junta los datos del dia simulado y se los pasa a los graficos.
  *
- * ---------------------------------------------------------------------------
- * DE DONDE SALEN VICTORIAS Y DERROTAS DEL ANILLO
- * ---------------------------------------------------------------------------
- * El enunciado pide el grafico de victorias/derrotas pero prohibe implementar
- * apuestas, asi que no existe una apuesta real que estadisticar. Por eso las
- * cifras se SIMULAN de forma determinista a partir de la semilla de las
- * carreras: mismo seed, mismas cifras, siempre.
+ * El anillo de victorias/derrotas se simula de forma determinista desde la
+ * semilla de las carreras, porque el enunciado prohibe implementar apuestas y
+ * no hay una apuesta real que estadisticar. Se calcula aqui y no en el grafico:
+ * un componente de presentacion no deberia inventar datos, y si cada uno
+ * generara los suyos dos graficos podrian discrepar.
  *
- * Se calcula AQUI y no dentro del grafico a proposito: los componentes de
- * presentacion no deberian inventar datos. Si el grafico generara sus propios
- * numeros, dos graficos podrian discrepar y seria imposible verificarlos.
- *
- * El conteo de victorias por caracol, en cambio, viene del servidor: el grafico
- * de barras y el anillo se apoyan en la MISMA fuente, asi que son coherentes
- * entre si.
+ * El conteo de victorias por caracol si viene del servidor, asi que las barras
+ * y el anillo descansan en la misma fuente.
  */
 import { useEffect, useState, useMemo } from 'react';
 import type { SimulatedDay } from '@snail/shared';

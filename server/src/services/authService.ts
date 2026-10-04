@@ -1,25 +1,9 @@
 /**
- * SERVICIO DE AUTENTICACION
- * ---------------------------------------------------------------------------
- * Este es el nucleo de la seguridad de la aplicacion.
- *
- * DECISION CLAVE: las contrasenas se guardan hasheadas con bcrypt, nunca en
- * texto plano.
- *
- *   - bcrypt es lento a proposito. Ese costo computacional es justamente la
- *     defensa: hace que un ataque de fuerza bruta sea inviable.
- *   - Si usaramos SHA-256 a secas, un atacante podria calcular miles de
- *     millones de intentos por segundo. Con bcrypt, muy pocos por segundo.
- *   - bcrypt genera un salt aleatorio por cada hash y lo incrusta dentro del
- *     resultado. Por eso dos usuarios con la misma contrasena producen hashes
- *     distintos, y eso impide tablas precalculadas (rainbow tables).
- *   - La comparacion se hace con bcrypt.compare(), que revisa todos los bytes
- *     del hash. Un simple "===" devolveria temprano en cuanto encuentra una
- *     diferencia y filtraria informacion por tiempo de ejecucion.
- *
- * En produccion se evaluaria argon2, que es mas resistente a ataques con
- * hardware especializado (GPU/ASIC). Aqui bcryptjs se elige porque es puro
- * JavaScript y no requiere compilacion nativa.
+ * Hash con bcrypt, nunca en texto plano, aunque sea una simulacion local.
+ * bcrypt es lento a proposito: SHA-256 permitiria millones de intentos por
+ * segundo y bcrypt muy pocos. Cada hash lleva su propio salt, asi que dos
+ * contrasenas iguales no dan el mismo hash. En produccion argon2 seria mejor
+ * frente a GPU; aqui se usa bcryptjs por ser JavaScript puro.
  */
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'node:crypto';
@@ -28,20 +12,12 @@ import { userStore } from '../data/store.js';
 import { config } from '../config/index.js';
 import { ErrorAplicacion } from '../middleware/errorHandler.js';
 
-/**
- * Sesiones en memoria: token -> id de usuario.
- * En produccion esto viviria en Redis o en una tabla, para que la sesion
- * sobreviva al reinicio del servidor y se pueda invalidar de verdad.
- */
+// En memoria: en produccion viviria en Redis o en una tabla, para que la
+// sesion sobreviva al reinicio y se pueda invalidar de verdad.
 const sessions = new Map<string, string>();
 
-/**
- * Convierte un User interno en el objeto que puede viajar al cliente.
- *
- * Es la unica proteccion contra filtrar el hash: si olvidas pasar por aqui y
- * mandas el User completo, estas exponiendo el hash (y con el, una via para
- * crackear la contrasena). Por eso PublicUser no tiene campo passwordHash.
- */
+// Unica proteccion contra filtrar el hash: si se manda el User entero, se
+// expone el hash y con el una via para crackear la contrasena.
 export function toPublicUser(user: User): PublicUser {
   return {
     id: user.id,
@@ -50,13 +26,8 @@ export function toPublicUser(user: User): PublicUser {
   };
 }
 
-/**
- * Crea un token de sesion aleatorio.
- *
- * randomBytes devuelve bytes impredecibles del sistema operativo. No se usa
- * Math.random() porque no es criptografico: su estado se puede reconstruir
- * observando unas pocas salidas.
- */
+// randomUUID es impredecible; Math.random() no lo es y se puede reconstruir
+// su estado observando unas pocas salidas.
 function crearToken(): string {
   return randomUUID();
 }
@@ -107,17 +78,10 @@ export async function registrar(
 }
 
 /**
- * Inicia sesion verificando correo y contrasena.
- *
- * Decisiones importantes:
- *   - Un unico mensaje de error para "correo inexistente" y "contrasena
- *     incorrecta". Si fueran distintos, un atacante podria enumerar quais
- *     correos estan registrados probando el formulario de login.
- *   - Cuando el correo no existe aun asi se ejecuta un bcrypt.compare() contra
- *     un hash ficticio. Asi el tiempo de respuesta es parecido en ambos casos
- *     y no se filtra informacion por duracion.
- *
- * @throws Error 'Credenciales invalidas' en cualquiera de los dos fallos.
+ * Un unico mensaje para "correo inexistente" y "contrasena incorrecta": si
+ * fueran distintos, el formulario serviria para enumerar correos registrados.
+ * Cuando el correo no existe se compara igual contra un hash ficticio, para
+ * que el tiempo de respuesta no delate el caso.
  */
 const HASH_FICTICIO =
   '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
@@ -151,10 +115,7 @@ export function cerrarSesion(token: string): void {
   sessions.delete(token);
 }
 
-/**
- * Borra todas las sesiones. Existe solo para las pruebas, por el mismo
- * motivo que userStore.clear(): el Map es estado de modulo.
- */
+// Solo para pruebas: el Map es estado de modulo y contaminaria otras suites.
 export function reiniciarSesiones(): void {
   sessions.clear();
 }

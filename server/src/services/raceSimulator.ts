@@ -1,26 +1,13 @@
 /**
- * SIMULADOR DE CARRERAS
- * ---------------------------------------------------------------------------
- * El enunciado pide datos simulados de 6 caracoles y 6 carreras, y añade un
- * requisito sutil: "deben tener congruencia con las reglas y parametros".
+ * Simulador: 6 caracoles y 6 carreras, congruentes con las reglas.
  *
- * DECISIÓN: el generador es determinista. Recibe una semilla y produce
- * SIEMPRE el mismo resultado.
+ * El generador es determinista: la misma semilla produce siempre el mismo
+ * resultado. Eso permite reproducir cada respuesta simulada (lo pide el
+ * enunciado), escribir pruebas que no fallen al azar, y garantizar las reglas
+ * por construccion en vez de repetir la generacion hasta que salga valida.
  *
- * Por qué esto importa de verdad (no es，从而使 la vida fácil):
- *   1. Reproducibilidad. El enunciado pide entregar "la información necesaria
- *      para reproducir cada respuesta simulada". Con semilla, cualquiera
- *      regenera exactamente los mismos datos y puede verificarlos.
- *   2. Pruebas estables. Un test que comprueba "la carrera 3 la gano X" no
- *      puede fallar de vez en cuando. Con datos aleatorios, habria que
- *      reintentar y el fallo seria imposible de reproducir.
- *   3. Congruencia demostrable. Con semilla se puede garantizar y probar que
- *      se cumplen las reglas. Con azar, habria que repetir la generacion
- *      hasta obtener un resultado valido, lo cual es fragil.
- *
- * El algoritmo es un PRNG propio (mulberry32): diminuto, rapido y suficiente
- * para datos de demostracion. No se usa Math.random() porque no es
- * determinista y no se puede replicar a partir de una semilla.
+ * El PRNG es mulberry32, propio: diminuto, rapido y sin dependencias.
+ * Math.random() no sirve porque no se puede replicar a partir de una semilla.
  */
 import type { Race, SimulatedDay, Snail } from '@snail/shared';
 
@@ -35,11 +22,8 @@ export const SNAILS: Snail[] = [
 
 export const CANTIDAD_CARRERAS = 6;
 
-/**
- * Genera un numero pseudoaleatorio en [0, 1) a partir de un estado entero.
- * Es "mulberry32": rapido, sin dependencias y suficientemente uniforme para
- * una simulacion.
- */
+// Genera un numero pseudoaleatorio en [0, 1) a partir de un estado entero.
+// Es mulberry32: rapido, sin dependencias y suficientemente uniforme.
 function crearGenerador(semilla: number): () => number {
   let estado = semilla >>> 0;
   return function siguiente(): number {
@@ -61,16 +45,8 @@ function semillaANumero(semilla: string): number {
   return hash >>> 0;
 }
 
-/**
- * Genera el dia simulado completo.
- *
- * Reglas garantizadas por construccion:
- *   - exactamente 6 caracoles (SNAILS)
- *   - exactamente 6 carreras (CANTIDAD_CARRERAS)
- *   - cada carrera tiene exactamente 1 ganador
- *   - el ganador siempre pertenece a la lista de caracoles
- *   - los identificadores de carrera son únicos
- */
+// Genera el dia completo. Por construccion: 6 caracoles, 6 carreras, un
+// ganador por carrera y siempre un caracol de la lista.
 export function generarDiaSimulado(semilla: string): SimulatedDay {
   const generar = crearGenerador(semillaANumero(semilla));
 

@@ -1,20 +1,9 @@
 /**
- * PRUEBAS DEL SERVICIO DE AUTENTICACION
- * ===========================================================================
- * Por que se prueba esto:
- *
- * El enunciado dice que "la forma en que decidas tratar y almacenar la
- * contrasena es parte de la evaluacion". Es la decision de seguridad central
- * de la aplicacion, asi que necesita pruebas que laProtejan.
- *
- * Que se verifica:
- *   1. La contrasena NUNCA se guarda en texto plano.
- *   2. Dos usuarios con la misma contrasena producen hashes distintos.
- *   3. El correo es unico (sin distincion de mayusculas).
- *   4. El login falla con credenciales incorrectas.
- *   5. El login falla con correo inexistente, y con el MISMO mensaje, para
- *      no permitir enumerar cuentas.
- *   6. El token permite recuperar el usuario y cerrar la sesion lo invalida.
+ * El enunciado incluye el tratamiento de la contrasena en la evaluacion, asi
+ * que estas pruebas cubren lo que no puede fallar: que nunca se guarde en
+ * texto plano, que el salt haga que dos contrasenas iguales den hashes
+ * distintos, que el correo sea unico, y que el login no distinga entre correo
+ * inexistente y contrasena incorrecta (ni por mensaje ni por tiempo).
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import bcrypt from 'bcryptjs';

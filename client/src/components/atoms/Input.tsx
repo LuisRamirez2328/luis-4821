@@ -1,9 +1,6 @@
 /**
- * ATOMO: Input
- *
- * Un detalle de accesibilidad que importa: no se puede poner un <label> dentro
- * del input. La etiqueta va como atributo `htmlFor` y el input con `id`. Asi el
- * navegador la asocia y, al hacer clic en el texto, el foco va al campo.
+ * La etiqueta no va dentro del input: se asocia con htmlFor e id, para que el
+ * navegador la enlace y al hacer clic en el texto el foco vaya al campo.
  */
 import type { ChangeEvent } from 'react';
 

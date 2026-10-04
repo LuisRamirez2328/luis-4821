@@ -1,26 +1,14 @@
 /**
- * ORGANISMO: BetStatsPanel (grafico de anillo: victorias y derrotas)
- * ===========================================================================
- * Recharts no viene con un grafico de anillo, asi que se construye con
- * PieChart y dos sectors.
+ * Anillo de victorias y derrotas. Recharts no lo trae, asi que se hace con
+ * PieChart y dos sectores.
  *
- * ---------------------------------------------------------------------------
- * DONDE VIENEN LOS DATOS
- * ---------------------------------------------------------------------------
- * El enunciado pide el grafico pero prohibe implementar apuestas. Por eso los
- * datos son SIMULADOS y se derivan de la misma semilla que las carreras, con
- * una funcion determinista: mismo seed, mismo resultado.
+ * Los datos son simulados (el enunciado prohibe implementar apuestas) y salen
+ * de la misma semilla que las carreras, con lo que el anillo y las barras se
+ * pueden recalcular a mano.
  *
- * Es coherente con el resto de la app: el anillo y las barras salen del mismo
- * dia simulado, de modo que un revisor puede recalcularlos a mano.
- *
- * ---------------------------------------------------------------------------
- * POR QUE SE USA Math.round PARA EL PORCENTAJE
- * ---------------------------------------------------------------------------
- * Un anillo necesita dos sectores que sumen 360 grados exactos. Si se calcula
- * el segundo como 100 - primero, cualquier decimal redondeado en el primero
- * descuadra la circunferencia y Recharts dibuja un sector deformado.
- * Redondeando ambos a enteros, la suma es exactamente 100.
+ * Los dos porcentajes se redondean a enteros porque el anillo necesita sumar
+ * 360 grados exactos; si el segundo fuera 100 - primero, el decimal redondeado
+ * descuadraria la circunferencia y el sector saldria deformado.
  */
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 

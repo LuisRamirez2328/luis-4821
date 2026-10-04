@@ -1,15 +1,12 @@
 /**
- * MIDDLEWARE DE AUTENTICACION
- * ---------------------------------------------------------------------------
- * Un middleware se ejecuta EN MEDIO, entre que llega la peticion y la ruta.
- * Se registra con app.use(...) y por eso intercepta lo que venga despues.
+ * Middleware de autenticacion: se ejecuta entre la peticion y la ruta, asi que
+ * app.use(...) intercepta lo que venga despues.
  *
- * La cadena de ejecucion de una peticion es:
  *   peticion -> express.json() -> requireAuth -> ruta -> errorHandler
  *
- * Regla de diseño: este middleware NO responde. Solo lee el token y coloca el
- * usuario en req. Quien decide el 401 es la ruta, via la funcion "exigir".
- * Asi el middleware se puede reutilizar en modo opcional o obligatorio.
+ * No responde ni decide el 401: solo lee el token y deja el usuario en req.
+ * Quien rechaza es la ruta, via "exigir", y asi el middleware sirve tanto en
+ * modo opcional como obligatorio.
  */
 import type { NextFunction, Request, Response } from 'express';
 import { usuarioDesdeToken } from '../services/authService.js';

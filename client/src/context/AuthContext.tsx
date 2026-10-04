@@ -1,25 +1,11 @@
 /**
- * CONTEXTO DE AUTENTICACION
- * ===========================================================================
- * React no tiene un estado global incorporado. El problema: la sesion la
- * necesitan el boton de logout (en el layout) y el dashboard. Pasarla por
- * props ahi obliga a repetirla en cada nivel intermedio.
+ * Sesion global. React no trae estado global, y la sesion la necesitan el
+ * logout y el dashboard: pasarla por props habria que repetirla en cada nivel.
+ * Context crea el canal invisible; useAuth() lo lee desde cualquier sitio.
  *
- * Context crea un "canal" invisible: cualquier componente puede leerlo con
- * useAuth() sin recibir props. Se declara en main.tsx como ancestro de <App/>,
- * y por eso todo el arbol tiene acceso.
- *
- * ---------------------------------------------------------------------------
- * ESTADOS DE LA SESION
- * ---------------------------------------------------------------------------
- *   cargando -> verificando el token guardado con el servidor
- *   sin sesion -> no hay token valido, mostrar login
- *   con sesion -> token valido, mostrar dashboard
- *
- * El estado "cargando" es indispensable: sin el, al recargar la pagina la app
- * llegaria a conclusion "estoy deslogueado" antes de tener respuesta del
- * servidor, y expulsaria al usuario. Ese parpadeo es el bug clasico al
- * implementar "mantener la sesion".
+ * Estados: cargando (verificando el token), sin sesion, con sesion. El
+ * "cargando" no es opcional: sin el, al recargar la app concluiria que esta
+ * deslogueada antes de recibir respuesta del servidor y expulsaria al usuario.
  */
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';

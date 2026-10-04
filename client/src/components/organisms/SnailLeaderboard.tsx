@@ -1,23 +1,13 @@
 /**
- * ORGANISMO: SnailLeaderboard (grafico de barras: victorias por caracol)
- * ---------------------------------------------------------------------------
- * Requisito del enunciado: "grafico de barras que muestre las victorias de los
- * 6 caracoles en un dia simulado".
+ * Barras de victorias por caracol.
  *
- * ---------------------------------------------------------------------------
- * POR QUE SE USA "6" COMO ALTURA FIJA
- * ---------------------------------------------------------------------------
- * El eje vertical se limita a 6 porque son 6 carreras, asi que 6 es el maximo
- * teorico de victorias que un caracol puede alcanzar. Fijar el tope hace que
- * la comparacion entre barras sea siempre igual, sin que la escala cambie
- * segun el resultado. Es una decision de lectura de datos, no de estetica.
+ * El eje se limita a 6 porque es el maximo teorico con 6 carreras. Fijar el tope
+ * mantiene la comparacion igual entre ejecuciones, en vez de que la escala cambie
+ * con el resultado.
  *
- * ---------------------------------------------------------------------------
- * BARRA EN CERO
- * ---------------------------------------------------------------------------
- * Recharts no dibuja una barra de altura 0, asi que un caracol sin victorias
- * desaparecia del grafico. Se resuelve con un margen minimo de 1px, y se
- * documenta aqui porque es un parche visual, no un dato.
+ * Recharts no dibuja una barra de altura 0 y el caracol sin victorias
+ * desaparecia del grafico, asi que se le da un minimo de 1px. Es un parche
+ * visual, no un dato.
  */
 import {
   BarChart,

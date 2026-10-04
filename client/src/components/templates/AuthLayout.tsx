@@ -1,18 +1,10 @@
 /**
- * PLANTILLA: AuthLayout
- * ---------------------------------------------------------------------------
- * En Atomic Design, una plantilla define la ESTRUCTURA de una pantalla y
- * deja un hueco (children) donde se inyecta el contenido.
+ * Marco comun de login y registro: define la estructura y deja el hueco
+ * children para el contenido, sin duplicar la pantalla.
  *
- * Sirve para que login y registro compartan el mismo marco sin duplicarlo.
- *
- * ---------------------------------------------------------------------------
- * POR QUE ESTA DIVIDIDA EN DOS PANELES
- * ---------------------------------------------------------------------------
- * El panel de marca no es decoracion: sostiene el titulo grande, que es la
- * primera impresion del sitio. El formulario, en cambio, cambia entre login y
- * registro pero comparte caja, encabezado yfilete, asi que no necesita su
- * propia pantalla.
+ * El panel de marca sostiene el titulo grande, que es la primera impresion del
+ * sitio; el formulario cambia entre login y registro pero comparte caja y
+ * encabezado, asi que no necesita pantalla propia.
  */
 import type { ReactNode } from 'react';
 

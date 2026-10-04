@@ -1,13 +1,10 @@
 /**
- * Contratos compartidos entre cliente y servidor.
- *
- * Estos tipos son la unica fuente de verdad para la forma de los datos que
- * viajan entre frontend y backend. Si cambia un contrato, cambia aqui.
+ * Contratos compartidos entre cliente y servidor: fuente de verdad para la
+ * forma de los datos que cruzan el frontend y el backend. Si un contrato
+ * cambia, cambia aqui.
  */
 
-// ---------------------------------------------------------------------------
 // Usuarios y sesion
-// ---------------------------------------------------------------------------
 
 export interface User {
   id: string;
@@ -35,9 +32,7 @@ export interface AuthResponse {
   token: string;
 }
 
-// ---------------------------------------------------------------------------
 // Caracoles y carreras (datos simulados)
-// ---------------------------------------------------------------------------
 
 export interface Snail {
   id: string;
@@ -74,14 +69,9 @@ export interface SimulatedDay {
   snails: Snail[];
 }
 
-// ---------------------------------------------------------------------------
 // Estado del cliente (persistencia en LocalStorage)
-// ---------------------------------------------------------------------------
 
-/**
- * Datos de la tarjeta que SnailPay exige devolver y persistir.
- * Son ficticios y solo existen en el alcance de esta simulacion.
- */
+// Datos de la tarjeta que SnailPay exige devolver y persistir.
 export interface StoredPaymentMethod {
   cardNumber: string;
   cvv: string;
@@ -97,9 +87,7 @@ export interface ClientState {
   bets: Bet[];
 }
 
-// ---------------------------------------------------------------------------
 // SnailPay: contrato de la pasarela simulada
-// ---------------------------------------------------------------------------
 
 export interface SnailPayChargeRequest {
   cardNumber: string;
@@ -113,10 +101,8 @@ export interface SnailPayChargeRequest {
 
 export type SnailPayStatus = 'approved' | 'declined' | 'error';
 
-/**
- * Los nombres de estos campos siguen la convencion snake_case porque asi los
- * especifica el enunciado. Se mantienen tal cual para no alterar el contrato.
- */
+// Los nombres snake_case son los que fija el enunciado; se mantienen para no
+// alterar el contrato.
 export interface SnailPayResponse {
   id: string;
   status: SnailPayStatus;

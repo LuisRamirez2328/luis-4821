@@ -1,15 +1,11 @@
 /**
- * PRUEBAS DE SNAILPAY
- * ===========================================================================
- * El enunciado define tres escenarios y una regla critica: en caso de fallo,
- * el saldo NO debe modificarse. Estas pruebas cubren los tres escenarios y,
- * sobre todo, la regla del saldo.
+ * Los tres escenarios del enunciado, y sobre todo la regla de que un fallo no
+ * modifica el saldo.
  *
- * Nota sobre "el saldo no se modifica": el saldo vive en el cliente
- * (LocalStorage), y el servidor no lo toca nunca. Lo que se verifica aqui es
- * que la respuesta nunca indique un cobro aprobado cuando en realidad fallo,
- * porque eso es lo unico que podria hacer que un cliente bien escrito sume
- * saldo por error.
+ * El saldo vive en el cliente y el servidor nunca lo toca, asi que lo que se
+ * comprueba aqui es que la respuesta nunca indique un cobro aprobado cuando en
+ * realidad fallo: es lo unico que podria hacer que un cliente bien escrito
+ * sumara saldo por error.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import {

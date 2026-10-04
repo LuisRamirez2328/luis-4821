@@ -1,7 +1,7 @@
 /**
  * Esquemas de validacion con Zod.
  *
- * Decision de diseño: la validacion vive en el servidor, no solo en el cliente.
+ * Decision de diseno: la validacion vive en el servidor, no solo en el cliente.
  * El cliente valida por experiencia de usuario; el servidor valida porque es
  * la unica frontera confiable. Un cliente se puede modificar, el servidor no.
  */

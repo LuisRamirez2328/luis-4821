@@ -1,21 +1,11 @@
 /**
- * ORGANISMO: AuthForm
- * ---------------------------------------------------------------------------
- * Un solo componente para login y registro. Se decide con `modo`, y las
- * diferencias son declarativas (que campos se muestran) en lugar de tener dos
- * formularios duplicados.
+ * Login y registro en un componente, con las diferencias declarativas segun
+ * `modo`. Dos formularios paralelos se desincronizan en cuanto cambia una regla
+ * de validacion y alguien olvida aplicarla en el otro.
  *
- * Motivo: dos formularios paralelos se desincronizan. El dia que se cambie una
- * regla de validacion, es facil olvidar aplicarla en el otro.
- *
- * ---------------------------------------------------------------------------
- * VALIDACION EN DOS CAPAS
- * ---------------------------------------------------------------------------
- *   1. Aqui: validacion de EXPERIENCIA. Da feedback inmediato, sin gastar un
- *      viaje al servidor.
- *   2. En el servidor (Zod): validacion de SEGURIDAD. Es la unica que cuenta.
- *      La del cliente es solo cortesia y se puede saltarse desde la consola.
- * Ninguna duplica trabajo: cada capa cubre lo que la otra no puede.
+ * La validacion va en dos capas: aqui es de experiencia (feedback inmediato sin
+ * gastar un viaje) y en el servidor con Zod es la de seguridad, la unica que
+ * cuenta, porque la del cliente se puede saltarse desde la consola.
  */
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -62,7 +52,7 @@ export function AuthForm({ modo, onCambiarModo }: AuthFormProps) {
       errores.password = 'La contrasena debe tener al menos 8 caracteres';
     }
     // Solo en registro tiene sentido comparar. En login no existe un campo
-    // de confirmacion, y exigirlo alli seria un error de diseño.
+    // de confirmacion, y exigirlo alli seria un error de diseno.
     if (esRegistro && password !== passwordConfirm) {
       errores.passwordConfirm = 'Las contrasenas no coinciden';
     }

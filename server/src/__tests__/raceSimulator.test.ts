@@ -1,15 +1,8 @@
 /**
- * PRUEBAS DEL SIMULADOR DE CARRERAS
- * ---------------------------------------------------------------------------
- * Estas pruebas son la evidencia de la "congruencia" que exige el enunciado.
- * Verifican tres cosas:
- *
- *   1. Las reglas basicas: 6 caracoles, 6 carreras, 1 ganador por carrera,
- *      y que ese ganador siempre sea un caracol valido.
- *   2. El determinismo: la misma semilla produce exactamente los mismos datos.
- *      Sin esto, no seria posible "reproducir cada respuesta simulada".
- *   3. La variedad: semillas distintas producen resultados distintos, para
- *      no entregar siempre la misma tabla.
+ * Evidencia de la congruencia que pide el enunciado: 6 caracoles, 6 carreras,
+ * un ganador por carrera y siempre un caracol valido; la misma semilla produce
+ * los mismos datos (sin eso no se podrian reproducir) y semillas distintas
+ * producen resultados distintos.
  */
 import { describe, it, expect } from 'vitest';
 import { generarDiaSimulado, contarVictorias, SNAILS, CANTIDAD_CARRERAS } from '../services/raceSimulator.js';

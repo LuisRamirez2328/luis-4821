@@ -1,24 +1,10 @@
 /**
- * ENRUTADOR DE LA APLICACION
- * ---------------------------------------------------------------------------
- * Define las rutas y decide que se muestra en cada una.
+ * Rutas y que se muestra en cada una. <RutaPrivada> envuelve las pantallas que
+ * exigen sesion.
  *
- * El elemento central es <RutaPrivada>: envuelve las pantallas que exigen
- * sesion. Es la contraparte del middleware exigirSesion del servidor.
- *
- * ---------------------------------------------------------------------------
- * POR QUE HAY UNA GUARDA EN EL CLIENTE Y OTRA EN EL SERVIDOR
- * ---------------------------------------------------------------------------
- * Son capas distintas y ninguna sobra:
- *
- *   Cliente: mejora la EXPERIENCIA. Evita mostrar el dashboard y luego
- *   expulsar al usuario con un error. Barato y visible.
- *
- *   Servidor: aporta la SEGURIDAD. Si solo existiera la guarda del cliente,
- *   bastaria con llamar la API a mano desde la consola. El servidor es la
- *   unica capa en la que se puede confiar, porque no se puede saltar.
- *
- * Proteger solo el cliente es el error clasico de seguridad web.
+ * Hay guarda en cliente y en servidor porque son capas distintas: el cliente
+ * mejora la experiencia y el servidor aporta la seguridad, que es la unica que
+ * no se puede saltar desde la consola.
  */
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
@@ -58,11 +44,8 @@ function RedirigirSiHaySesion({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Solo las rutas, sin el router.
- *
- * Se separa de <App> para que las pruebas puedan montarla dentro de un
- * MemoryRouter. Anidar dos routers produce avisos y comportamiento ambiguo:
- * por eso la version testeable no incluye el BrowserRouter.
+ * Sin el router, para que las pruebas puedan montarla en un MemoryRouter:
+ * anidar dos routers produce avisos y comportamiento ambiguo.
  */
 export function AppRoutes() {
   return (

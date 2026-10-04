@@ -1,53 +1,24 @@
 /**
- * SERVICIO SNAILPAY (pasarela simulada)
- * ===========================================================================
- * Este modulo es el corazon de la prueba. El enunciado exige tres escenarios
- * y una serie de reglas que no se pueden romper.
+ * SnailPay: pasarela simulada. Tres escenarios, con numeros de tarjeta
+ * deterministas para poder reproducirlos:
  *
- * ---------------------------------------------------------------------------
- * TARJETAS DE PRUEBA
- * ---------------------------------------------------------------------------
- * Se sigue la convencion habitual de pasarelas reales (tarjetas de prueba):
- * una tarjeta valida y numero de tarjeta deterministas significan "aprobada".
- * Asi la operacion es 100% reproducible, que es lo que pide el enunciado.
+ *   1234123412341234  aprobado (lo exige el enunciado)
+ *   4000000000000002  tarjeta rechazada
+ *   0000000000000000  caida del sistema
  *
- *   1234123412341234  -> cobro EXITOSO   (exigido por el enunciado)
- *   4000000000000002  -> tarjeta RECHAZADA (error de transaccion)
- *   0000000000000000  -> CAIDA DEL SISTEMA (error de sistema, documentado)
+ * Mientras la pasarela esta caida no se aprueba nada, ni con la tarjeta buena.
  *
- * La ultima es la "forma documentada" que el enunciado pide para simular que
- * SnailPay no puede procesar solicitudes. Mientras este modo este activo,
- * NINGUNA recarga se aprueba, ni siquiera con la tarjeta buena.
- *
- * ---------------------------------------------------------------------------
- * REGLAS INVIOLABLES
- * ---------------------------------------------------------------------------
- *   1. Si la operacion falla, el saldo NO se modifica.
- *   2. Nunca devolver un cobro exitoso falso.
- *   3. La respuesta incluye siempre los 9 campos del contrato, mas numero de
- *      tarjeta y CVV (el enunciado los exige de forma explicita).
- *   4. El monto se valida en un RANGO, no solo como positivo. Ver la nota de
- *      seguridad de límites más abajo: es un bug real que se detectó durante
- *      las pruebas manuales.
- *
- * ---------------------------------------------------------------------------
- * NOTA SOBRE SEGURIDAD
- * ---------------------------------------------------------------------------
- * Devolver numero de tarjeta y CVV en la respuesta es una practica insegura:
- * en un sistema real esos datos jamas volverian al cliente. Aqui se incluye
- * porque el enunciado lo pide, y tiene sentido dentro del ejercicio: lo que
- * se simula es una pasarela de confianza, no un PSP real.
- *
- * Aun asi, el propio cliente guarda esos datos en LocalStorage, que es
- * accesible a cualquier script de la pagina (un XSS las leeria). En produccion
- * la mitigacion es no persistir el CVV nunca (los PCI DSS lo prohiben) y usar
- * un formulario alojado por el proveedor. Se documenta aqui para dejar clara
- * la consciousness de la limitacion.
+ * Dos avisos sobre esto:
+ *   - Si la operacion falla, el saldo no se toca. Este servicio nunca devuelve
+ *     un cobro exitoso falso ni un authorization_code en un rechazo.
+ *   - Devolver tarjeta y CVV, y guardarlos en el cliente, es inseguro: en un
+ *     sistema real jamas volverian al navegador. Se hace porque el enunciado lo
+ *     pide, y el riesgo queda anotado aqui a proposito.
  */
 import { randomUUID } from 'node:crypto';
 import type { SnailPayChargeRequest, SnailPayResponse } from '@snail/shared';
 
-// --- Tarjetas de prueba -----------------------------------------------------
+// Tarjetas de prueba
 export const TARJETA_EXITO = '1234123412341234';
 export const VENCIMIENTO_EXITO = '12/26';
 export const CVV_EXITO = '543';
@@ -55,30 +26,21 @@ export const CVV_EXITO = '543';
 export const TARJETA_RECHAZADA = '4000000000000002';
 export const TARJETA_CAIDA_SISTEMA = '0000000000000000';
 
-// --- Limites del monto -------------------------------------------------------
+// Limites del monto
 
 /** Recarga minima y maxima admitidas. */
 export const MONTO_MINIMO = 1;
 export const MONTO_MAXIMO = 20_000;
 
 /*
- * POR QUE EXISTE UN TECHO
- *
- * Bug real detectado durante la prueba manual: la validacion original solo
- * comprobaba que el monto fuera mayor que cero. Al teclear por error un numero
- * de tarjeta en el campo de monto, la pasarela aprobo una recarga de 4 billones
- * y el saldo quedo en esa cifra.
- *
- * El monto no es un entero cualquiera: es dinero. Sin un techo, un usuario
- * puede teclear un valor absurdo (un numero de tarjeta, un saldo equivocado) y
- * el sistema lo acepta como valido, porque el unico criterio era "positivo".
- *
- * Esto no es hipotetico: es exactamente lo que paso. Es el motivo de que la
- * validacion de un rango sea mas robusta que la de un simple "> 0", y de que
- * los limites de negocio se validen en el SERVIDOR, no solo en el formulario.
+ * El techo existe por un bug real: la validacion original solo comprobaba que
+ * el monto fuera mayor que cero, asi que teclear un numero de tarjeta en el
+ * campo de monto aprobo una recarga de 4 billones. El monto es dinero, y el
+ * unico criterio "positivo" aceptaba cualquier numero absurdo. Ademas el rango
+ * se valida en el servidor, que es la unica frontera confiable.
  */
 
-// --- Codigos de resultado ---------------------------------------------------
+// Codigos de resultado
 // CODIGO_APROBADO es el unico que se emite como authorization_code, y solo en
 // un cobro exitoso. Los rechazos y las caidas de sistema devuelven null.
 export const CODIGO_APROBADO = 'SNP-OK';
@@ -136,34 +98,21 @@ function construirRespuesta(
   };
 }
 
-/**
- * Procesa un cobro.
- *
- * @returns la respuesta de SnailPay. NO modifica ningun saldo: el saldo vive
- * en el cliente, y es el cliente quien debe aplicarlo solo si status es
- * "approved". Que la decision este del lado del cliente es justamente lo que
- * hace que un fallo nunca pueda alterar el saldo.
- */
-/**
- * Deja la tarjeta en solo digitos.
- *
- * El numero de tarjeta se pega y se teclea con guiones o espacios con mucha
- * frecuencia (los grupos de cuatro son como lo muestra cualquier formulario).
- * Comparar la cadena tal cual rechazaria una tarjeta correcta solo por su
- * formato, que es un fallo confuso: el usuario ve "tarjeta rechazada" cuando
- * los digitos son buenos.
- *
- * Se normaliza en el servidor y no solo en el cliente porque el cliente no es
- * una frontera confiable: cualquiera puede llamar a la API directamente.
- */
+// El numero se teclea y se pega con guiones o espacios. Comparar la cadena tal
+// cual rechazaria una tarjeta correcta solo por su formato. Se normaliza aqui y
+// no solo en el cliente porque el cliente no es una frontera confiable.
 function soloDigitos(texto: string): string {
   return texto.replace(/\D/g, '');
 }
 
+/**
+ * Procesa un cobro. No modifica ningun saldo: el saldo vive en el cliente y es
+ * el cliente quien lo aplica solo si status es "approved".
+ */
 export function cobrar(datos: SnailPayChargeRequest): SnailPayResponse {
   const tarjeta = soloDigitos(datos.cardNumber);
 
-  // --- Escenario 3: error del sistema -------------------------------------
+  // Escenario 3: error del sistema
   // Se evalua PRIMERO, antes de validar nada. Si la pasarela esta caida, no
   // importa que los datos sean correctos: no se procesa ninguna solicitud.
   const hayCaidaForzada = pasarela.enCaida;
@@ -177,7 +126,7 @@ export function cobrar(datos: SnailPayChargeRequest): SnailPayResponse {
     );
   }
 
-  // --- Validaciones de entrada --------------------------------------------
+  // Validaciones de entrada
   // Se comprueban antes de emitir ningun codigo de autorizacion. Una tarjeta
   // valida con un monto invalido no es un cobro: es un error de entrada.
   // El orden importa: primero se descarta lo que no es un numero, porque
@@ -247,7 +196,7 @@ export function cobrar(datos: SnailPayChargeRequest): SnailPayResponse {
     );
   }
 
-  // --- Escenario 1: cobro exitoso -----------------------------------------
+  // Escenario 1: cobro exitoso
   // Solo se llega aqui con todos los requisitos del enunciado cumplidos:
   // tarjeta 1234123412341234, vencimiento 12/26, CVV 543, nombre no vacio y
   // monto mayor que cero.
@@ -264,15 +213,12 @@ export function cobrar(datos: SnailPayChargeRequest): SnailPayResponse {
     );
   }
 
-  // --- Escenario 2: error de transaccion ----------------------------------
-  // Cualquier otra combinacion valida se rechaza. El detalle se devuelve en
-  // status_detail para que el usuario sepa que corregir, sin revelar reglas
-  // internas de la pasarela.
+  // Escenario 2: error de transaccion
+  // Cualquier otra combinacion valida se rechaza. El detalle va en status_detail
+  // para que el usuario sepa que corregir, sin revelar reglas internas.
   //
-  // authorization_code queda en null a proposito: ese campo significa "hubo un
-  // cargo". Emitirlo en un rechazo permitiria que un cliente contabilizara un
-  // cobro que en realidad no ocurrio, y es exactamente el fallo que el
-  // enunciado quiere evitar ("nunca devolver un cobro exitoso falso").
+  // authorization_code queda en null a proposito: significa "hubo un cargo", y
+  // emitirlo en un rechazo permitiria que un cliente sumara un cobro inexistente.
   return construirRespuesta(
     'declined',
     'La tarjeta fue rechazada por el emisor. Verifica los datos e intenta de nuevo. Tu saldo no fue modificado.',

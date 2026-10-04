@@ -1,10 +1,6 @@
 /**
- * Almacenamiento en memoria de la simulacion.
- *
- * Decision de diseño: esta prueba NO usa base de datos, asi que los datos
- * viven en memoria y se pierden al reiniciar el proceso. Es aceptable aqui
- * porque la especificacion lo pide de forma explicita; en produccion se
- * reemplazaria por un repositorio persistente.
+ * Almacenamiento en memoria: el enunciado no pide base de datos, asi que los
+ * datos se pierden al reiniciar. En produccion seria un repositorio persistente.
  */
 import type { User } from '@snail/shared';
 
@@ -27,13 +23,8 @@ export const userStore = {
     users.push(user);
   },
 
-  /**
-   * Vacia el store.
-   *
-   * Existe solo para las pruebas. Es necesario porque el store es un modulo
-   * con estado: sin este metodo, un usuario creado en una prueba se filtraria
-   * a la siguiente y las pruebas dejarian de ser independientes entre si.
-   */
+// Solo para pruebas: el store es estado de modulo, y sin esto un usuario creado
+// en una prueba se filtraria a la siguiente.
   clear(): void {
     users.length = 0;
   },

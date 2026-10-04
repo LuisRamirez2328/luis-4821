@@ -1,25 +1,14 @@
 ﻿/**
- * CONFIGURACION DE LAS PRUEBAS
- * ---------------------------------------------------------------------------
- * Los polyfills de aqui existen porque jsdom imita al navegador, pero no
- * replica TODAS sus APIs. No son parches del codigo de la app: son
- * el andamiaje que el entorno de pruebas necesita para ejecutar lo mismo
- * que el navegador.
+ * Polyfills del entorno, no parches de la app: jsdom imita al navegador pero no
+ * replica todas sus APIs, y sin esto los graficos no se montan.
  */
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
-/*
- * ResizeObserver
- *
- * Recharts lo usa dentro de ResponsiveContainer para detectar el ancho del
- * contenedor y redibujar el grafico. jsdom no lo implementa.
- *
- * El stub no hace nada a proposito: en las pruebas lo que se verifica es la
- * logica (porcentajes, saldo, rutas), no el pixel final de un SVG. Escribiendo
- * siempre el mismo tamano, el grafico se monta con dimensiones fijas y ya no
- * se redibuja en un bucle infinito.
- */
+// ResizeObserver: lo usa ResponsiveContainer de Recharts para medir el ancho y
+// redibujar. El stub no hace nada a proposito, porque lo que se prueba es la
+// logica y no el pixel final de un SVG; con tamano fijo el grafico tampoco se
+// redibuja en un bucle infinito.
 class ResizeObserverStub {
   observe(): void {}
   unobserve(): void {}

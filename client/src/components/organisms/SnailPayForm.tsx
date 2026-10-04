@@ -1,31 +1,12 @@
 /**
- * ORGANISMO: SnailPayForm
- * ===========================================================================
- * Este componente contiene la REGLA MAS IMPORTANTE de la aplicacion:
- * el saldo solo se modifica cuando SnailPay responde "approved".
+ * Regla central: el saldo solo sube si SnailPay responde "approved".
  *
- * ---------------------------------------------------------------------------
- * LA REGLA, Y POR QUE ESTA ESCRITA ASI
- * ---------------------------------------------------------------------------
- *      if (respuesta.status === 'approved') {
- *        recargarSaldo(respuesta.transaction_amount);
- *      }
+ *   if (respuesta.status === 'approved') recargarSaldo(...);
  *
- * El if es la garantia de que un fallo jamas altera el saldo. No es estilo ni
- * adorno: es el requisito literal del enunciado ("si falla la transaccion, el
- * saldo no debe verse modificado").
- *
- * La estructura lo hace a prueba de errores futuros: cualquier caso nuevo
- * (declined, error, caida del sistema, timeout) cae por defecto en la rama
- * que NO toca el saldo. Solo un "approved" explicito lo aumenta. Anadir un
- * escenario nuevo no puede romper la regla, porque el default es no sumar.
- *
- * ---------------------------------------------------------------------------
- * POR QUE EL SALDO VIVE EN EL CLIENTE
- * ---------------------------------------------------------------------------
- * El enunciado pide que el saldo se guarde en el navegador. El servidor, por
- * tanto, no conoce el saldo ni lo modifica nunca. Esa es la razon de que la
- * regla sea de un solo lado y sea trivial de demostrar.
+ * El default es no sumar, asi que declined, error, caida y timeout caen solos en
+ * la rama que no toca el saldo: anadir un escenario nuevo no puede romper la
+ * regla. El saldo vive en el cliente porque el enunciado lo pide, asi que el
+ * servidor nunca lo ve ni lo modifica.
  */
 import { useState } from 'react';
 import { api, ApiError } from '../../services/api';
@@ -34,35 +15,17 @@ import { FormField } from '../molecules/FormField';
 import { leerTarjeta } from '../../services/storage';
 import type { SnailPayResponse } from '@snail/shared';
 
-/*
- * Limites del monto, duplicados aqui a proposito.
- *
- * Se podrian importar del servidor, pero el cliente no debe depender del
- * servidor para compilar. Duplicar un dato de negocio que cambia poco es
- * aceptable; lo que NO es aceptable es validarlo en un solo lado, porque el
- * cliente es la capa que se puede saltear. El servidor mantiene su propia
- * copia, y esa es la que manda.
- */
+// Limites del monto duplicados a proposito: el cliente no debe depender del
+// servidor para compilar. Lo que no se acepta es validarlo en un solo lado,
+// porque el cliente se puede saltear. La copia del servidor es la que manda.
 const MONTO_MINIMO = 1;
 const MONTO_MAXIMO = 20_000;
 
-/*
- * Montos de un clic. Todos estan dentro del rango valido, y el que aparece
- * seleccionado por defecto es el que el campo ya trae precargado.
- */
+// Montos de un clic, todos dentro del rango valido.
 const MONTOS_SUGERIDOS = [50, 100, 250];
 
-/*
- * Formateo del vencimiento.
- *
- * Se queda solo con los digitos y reinserta la barra, de modo que escribir
- * "1226" produce "12/26" sin que el usuario tenga que acordarse de pulsar la
- * barra. Acepta las dos formas: teclear "12/26" a mano tambien funciona,
- * porque la barra se descarta y el resultado es el mismo.
- *
- * El recorte a cuatro digitos es lo que impide el desbordamiento: con el
- * maxLength del input, un quinto digito ya no tendria sitio.
- */
+// Se queda con los digitos y reinserta la barra, para que "1226" produzca
+// "12/26" sin que haya que pulsarla. Acepta tambien "12/26" tecleado a mano.
 function formatearVencimiento(texto: string): string {
   const digitos = texto.replace(/\D/g, '').slice(0, 4);
   if (digitos.length <= 2) {
@@ -71,29 +34,16 @@ function formatearVencimiento(texto: string): string {
   return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
 }
 
-/*
- * Formateo del numero de tarjeta: grupos de cuatro separados por guion.
- *
- * Es una ayuda de LECTURA, no de transporte. El guion se muestra, pero no se
- * envia: ver soloDigitos() mas abajo. Confundir las dos cosas es el error
- * clasico de este patron, y el sintoma es que la tarjeta correcta se rechaza.
- *
- * La funcion es idempotente: volver a aplicar el formato a una cadena ya
- * formateada no anade guiones nuevos, asi que se puede usar tanto al teclear
- * como al recuperar la tarjeta guardada.
- */
+// Grupos de cuatro separados por guion: es una ayuda de lectura, no de
+// transporte. El guion se muestra pero no se envia (ver soloDigitos). Es
+// idempotente, asi que sirve al teclear y al recuperar la tarjeta guardada.
 function formatearTarjeta(texto: string): string {
   const digitos = texto.replace(/\D/g, '').slice(0, 16);
   return digitos.replace(/(.{4})/g, '$1-').replace(/-$/, '');
 }
 
-/*
- * Deja la tarjeta en solo digitos para el payload de la API.
- *
- * El guion es cosmetico y se lo pone la interfaz a quien teclea. SnailPay
- * compara contra el numero en crudo, asi que lo que viaja por la red tiene que
- * ser 1234123412341234 y no 1234-1234-1234-1234.
- */
+// El guion es cosmetico. SnailPay compara contra el numero en crudo, asi que
+// por la red viaja 1234123412341234 y no 1234-1234-1234-1234.
 function soloDigitos(texto: string): string {
   return texto.replace(/\D/g, '');
 }
