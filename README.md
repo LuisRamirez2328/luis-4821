@@ -324,10 +324,11 @@ Se usaron dos herramientas de inteligencia artificial:
 - **v0, de Vercel** — generó un diseño de referencia con sus pantallas y su
   estilo. Se tomó como guía de apariencia y la interfaz se reimplementó por
   completo en React con Vite: ninguno de sus archivos ni de sus dependencias
-  está en el proyecto. La hoja de estilos (`client/src/styles/global.css`, 1007
-  líneas) es propia y no usa ningún framework.
-- **OpenCode** — asistente de código en la terminal, empleado para la revisión
-  del código, la documentación y el README.
+  está en el proyecto.
+- **OpenCode** — asistente de código en la terminal, empleado para desarrollar
+  el resto del código de la aplicación, incluida la hoja de estilos
+  (`client/src/styles/global.css`, 1007 líneas, sin ningún framework), además
+  de la revisión del código, la documentación y este README.
 
 La arquitectura, las decisiones de seguridad y las pruebas se definieron de forma
 explícita y están documentadas en los puntos 7 y 8 de este README y en los
