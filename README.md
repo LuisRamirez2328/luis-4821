@@ -88,6 +88,30 @@ En los escenarios 2 y 3 **el saldo no se modifica**. La garantía está en
 `client/src/components/organisms/SnailPayForm.tsx`: el saldo solo aumenta dentro
 de `if (respuesta.status === 'approved')`.
 
+### Formato de la respuesta
+
+El contrato vive en `shared/src/index.ts` (`SnailPayResponse`), de modo que el
+cliente y el servidor no puedan desincronizarse. Son once campos:
+
+| Campo | Tipo | Contenido |
+| --- | --- | --- |
+| `id` | `string` | Identificador de la operación |
+| `status` | `'approved' \| 'declined' \| 'error'` | Resultado de la operación |
+| `status_detail` | `string` | Explicación legible del resultado |
+| `transaction_amount` | `number` | Monto cobrado |
+| `date_created` | `string` | Fecha y hora de la operación |
+| `authorization_code` | `string \| null` | `SNP-OK` solo si se aprueba; `null` si no |
+| `reference` | `string` | Referencia de la transacción |
+| `payer_id` | `string` | Identificador del pagador |
+| `payer_email` | `string` | Correo del pagador |
+| `cardNumber` | `string` | Número de tarjeta, devuelto tal como se recibió |
+| `cvv` | `string` | Código de seguridad, devuelto tal como se recibió |
+
+Los dos últimos los exige el enunciado, que pide que la pasarela devuelva los
+datos de la tarjeta. En una pasarela real no se harían nunca: el código de
+seguridad no debe salir del navegador ni quedar registrado en ningún log. Aquí se
+devuelven solo porque el requisito es explícito, y el propio código lo advierte.
+
 ### Validación en tres capas del monto
 
 El monto se valida en tres sitios, y cada uno tiene un propósito distinto:
@@ -244,7 +268,7 @@ responde en milisegundos: 15 s solo se agotan ante un problema real.
   que el formato de entrada no altere el veredicto: la tarjeta de éxito se
   acepta con guiones o espacios, y las de rechazo y de caída se detectan
   igual.
-- **Cliente (30):** porcentajes del anillo que suman 100, persistencia del saldo,
+- **Interfaz (26):** porcentajes del anillo que suman 100, persistencia del saldo,
   que un fallo **no** modifique el saldo, que un éxito sí lo aumente, el bloqueo
   de montos inválidos sin llegar a llamar a la API, que la ruta protegida no
   muestre el dashboard sin sesión, el aislamiento del saldo entre dos cuentas
@@ -295,8 +319,18 @@ coherentes entre sí.
 
 ## 11. Uso de asistencia automatizada
 
-Este proyecto se desarrolló con ayuda de un asistente de IA para escribir el
-código, explicar las decisiones y redactar la documentación. La arquitectura, las
-decisiones de seguridad y las pruebas se definieron de forma explícita y están
-documentadas en los puntos 7 y 8 de este README y en los comentarios del código.
+Se usaron dos herramientas de inteligencia artificial:
+
+- **v0, de Vercel** — generó un diseño de referencia con sus pantallas y su
+  estilo. Se tomó como guía de apariencia y la interfaz se reimplementó por
+  completo en React con Vite: ninguno de sus archivos ni de sus dependencias
+  está en el proyecto. La hoja de estilos (`client/src/styles/global.css`, 1007
+  líneas) es propia y no usa ningún framework.
+- **OpenCode** — asistente de código en la terminal, empleado para la revisión
+  del código, la documentación y el README.
+
+La arquitectura, las decisiones de seguridad y las pruebas se definieron de forma
+explícita y están documentadas en los puntos 7 y 8 de este README y en los
+comentarios del código. Cada sugerencia se verificó con una prueba automatizada o
+se contrastó con el enunciado antes de aceptarse.
 
