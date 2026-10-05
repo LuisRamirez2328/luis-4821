@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Carreras de Caracoles">
+  <!-- Fondo: navy de la app -->
+  <rect width="64" height="64" rx="12" fill="#1d2d44"/>
+
+  <!-- Concha: espiral de dos vueltas, en acero palido -->
+  <g fill="none" stroke="#c9dce8" stroke-width="3.2" stroke-linecap="round">
+    <path d="M32 27 a3.2 3.2 0 1 1 -0.01 0"/>
+    <path d="M32 27 a9 9 0 1 1 -0.01 0"/>
+    <path d="M32 27 a16 16 0 1 1 -0.01 0"/>
+  </g>
+
+  <!-- Cuerpo del caracol, saliendo hacia abajo a la derecha -->
+  <path
+    d="M24 42
+       q0 -5 6 -6
+       q7 -1 10 3
+       q3 3 8 4
+       l3 1
+       q1 3 -3 3
+       q-7 0 -12 -2
+       q-7 -3 -12 -3
+       z"
+    fill="#eaf2f8"/>
+
+  <!-- Tentáculos -->
+  <path d="M27 39 q-5 -5 -7 -9" fill="none" stroke="#eaf2f8" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M31 37 q-3 -5 -4 -8" fill="none" stroke="#eaf2f8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Ojo -->
+  <circle cx="21" cy="29" r="1.8" fill="#1d2d44"/>
+</svg>
