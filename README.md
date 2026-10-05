@@ -239,7 +239,7 @@ casos que de otro modo habría que repetir en cada pantalla:
 
 | Situación | Código | Qué ve el usuario |
 | --- | --- | --- |
-| El servidor no responde en 15 s | `TIMEOUT` | «El servidor tardo demasiado en responder.» |
+| El servidor no responde en 15 s | `TIMEOUT` | «El servidor tardó demasiado en responder.» |
 | Servidor caído o sin red | `NETWORK_ERROR` | «No se pudo conectar con el servidor.» |
 | El servidor responde con error | código de SnailPay | El `status_detail` que él envió |
 | Sesión caducada (401) | `AUTH_EXPIRED` | Cierre de sesión automático |
@@ -319,7 +319,7 @@ coherentes entre sí.
 
 ## 11. Uso de asistencia automatizada
 
-Se usaron dos herramientas de inteligencia artificial:
+Se usaron tres herramientas de inteligencia artificial:
 
 - **v0, de Vercel** — generó un diseño de referencia con sus pantallas y su
   estilo. Se tomó como guía de apariencia y la interfaz se reimplementó por
@@ -329,6 +329,8 @@ Se usaron dos herramientas de inteligencia artificial:
   el resto del código de la aplicación, incluida la hoja de estilos
   (`client/src/styles/global.css`, 1007 líneas, sin ningún framework), además
   de la revisión del código, la documentación y este README.
+- **Claude, de Anthropic** — usado en un chat conversacional para evaluar el
+  documento de respuesta contra los requisitos y reescribir su redacción.
 
 La arquitectura, las decisiones de seguridad y las pruebas se definieron de forma
 explícita y están documentadas en los puntos 7 y 8 de este README y en los

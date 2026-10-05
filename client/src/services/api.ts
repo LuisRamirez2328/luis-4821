@@ -71,7 +71,7 @@ async function peticion<T>(
     // un fallo de red real para poder decir el motivo correcto al usuario.
     if (e instanceof Error && e.name === 'AbortError') {
       throw new ApiError(
-        'El servidor tardo demasiado en responder. Intenta de nuevo.',
+        'El servidor tardó demasiado en responder. Intenta de nuevo.',
         0,
         'TIMEOUT',
       );
